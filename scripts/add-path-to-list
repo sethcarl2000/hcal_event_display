@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# adds a given path to list with variable name 'list_name'. 
+# 
+
+usage() {
+    echo "Usage: "
+    echo "  add-path-to-list \"my/path\" list_name."
+    echo ""
+    echo "  adds path 'my/path' to ':'-delimited list of paths with var. name: list_name."
+    echo "  if my/path is already in the list 'list_name', then does nothing." 
+    echo ""
+    echo "" 
+    echo " example: add path '/home/my-project/build' to LD_LIBRARY_PATH"  
+    echo ""
+    echo " $ echo \$LD_LIBRARY_PATH"
+    echo ""
+    echo "      /home/other-project/build"
+    echo ""
+    echo " $ source add-path-to-list \"/home/my-project/build\" LD_LIBRARY_PATH" 
+    echo " $ echo \$LD_LIBRARY_PATH"
+    echo ""
+    echo "      /home/my-project/build:/home/other-project/build"
+    echo ""
+}
+
+
+if [[ -z "${1}" || -z "${2}" ]]
+then
+    usage
+    exit 0
+fi
+
+my_path="${1}"
+list_name="${2}"
+list="${!list_name}"
+
+is_in_list="false"
+
+IFS=":" read -ra paths <<< "${list}"
+
+for path_item in "${paths[@]}" 
+do
+    if [[ "${path_item}" == "${my_path}" ]]; 
+    then 
+        is_in_list="true"
+        break    
+    fi 
+done
+
+# we need to add our path to the list of paths
+if [[ "${is_in_list}" == "false" ]]
+then
+    # echo "<${0}>: path '${my_path}' not found in list '${list_name}', adding it." 
+    if [[ -z "${list}" ]]
+    then 
+        list="${my_path}"
+    else 
+        list="${my_path}:${list}"
+    fi
+fi 
+#else 
+    # echo "<${0}>: path '${my_path}' already found in path-list '${list_name}'."
+# fi 
+
+# overwrite the existing value of 'list'
+# echo "cmd: 'export ${list_name}=\"${list}\"'"
+eval "export ${list_name}=\"${list}\"" 
