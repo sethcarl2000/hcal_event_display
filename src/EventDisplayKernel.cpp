@@ -114,9 +114,9 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
     // and this vector itself is an 'RResultPtr'. This lets us 'request' this data from the RDataFrame before we run it over all the data. 
     // then, in one fell swoop, we will fill all requested branches, making sure that we dont make duplicate copies of data (if multiple drawing routines request it). 
     static std::map<std::string, ROOT::RDF::RResultPtr<std::vector<T>>> fBranches; 
-    
+
     // we need to be able to return a 'default constructed' version of this object (i.e. empty vector, or '0' if its an int / float)
-    //static_assert(std::is_trivially_constructible_v<T>, "Template arg 'T' is not trivially constructable");
+    static_assert(std::is_default_constructible_v<T>, "Template arg 'T' is not trivially constructable");
 
     //first, check the status of the app. 
     switch (fAppState) {
