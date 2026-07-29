@@ -40,6 +40,13 @@ void EventDisplayKernel::LaunchApp()
     try {
         
         fDataFrame = std::make_unique<ROOT::RDataFrame>(fTreeName, fFilePath); 
+
+        if (!fDataFrame) {
+            throw std::runtime_error("in <LaunchApp>: Dataframe failed to be constructed."); 
+        }
+
+        //get list of column names
+        fBranchList = fDataFrame->GetColumnNames(); 
         
     } catch (const std::exception& e) {
         Error(__func__, "Something went wrong trying to open the file / tree.\n"
@@ -120,7 +127,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
     //first, check the status of the app. 
     switch (fAppState) {
-        case AppState::kNone : return T{};
+        case AppState::kNone : { return T{}; break; }
 
         case AppState::kActive : { // We're in the 'run' phase ------------------------------------------------------------------------------
 
@@ -170,16 +177,30 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                 return T{};
             }
 
+            //std::cout << "branch: '" << branch_name << "' type: '" << GetDataFrame()->GetColumnType(branch_name) 
+            //    << "' template type: '" << TClass::GetClass(typeid(T))->GetName() << "'\n"; 
+
             //check to make sure the branch type matches the type given. 
             std::string branch_type = GetDataFrame()->GetColumnType(branch_name); 
-            if (!BranchTypeMatches(branch_type, typeid(T))) {
+            if (!BranchTypeMatches(branch_name, typeid(T))) {
 
-                auto data_type = TDataType::GetDataType(TDataType::GetType(typeid(T)));
+                const char* requested_class_name=nullptr; 
+
+                
+                if (auto my_type = TClass::GetClass(typeid(T))) {
+
+                    requested_class_name = my_type->ClassName();
+                }
+                if (auto my_datatype = TDataType::GetDataType( TDataType::GetType(typeid(T)))) {
+
+                    requested_class_name = my_datatype->GetTypeName().Data(); 
+                } 
+
 
                 Error("GetData(init phase)", "Branch '%s' is reported as having type '%s', but this function was invoked with type '%s'.",
                     branch_name.c_str(), 
                     branch_type.c_str(), 
-                    (data_type ? data_type->GetTypeName().Data() : "null")
+                    (requested_class_name != nullptr ? requested_class_name : "null")
                 );
                 std::exit(1); 
                 return T{};
@@ -229,7 +250,7 @@ template unsigned int EventDisplayKernel::GetData<unsigned int>(std::string bran
 bool EventDisplayKernel::BranchTypeMatches(std::string branch_name, const std::type_info& type)
 {
     ROOT::RDataFrame *df; 
-    if (df = GetDataFrame()) {
+    if (!(df = GetDataFrame())) {
         Error(__func__, "Dataframe is null"); 
         std::exit(1); 
     }   
@@ -241,19 +262,26 @@ bool EventDisplayKernel::BranchTypeMatches(std::string branch_name, const std::t
 
     //Claude Fable showed me how to do this 
 
-    const char* branch_type_str = df->GetColumnType(branch_name).c_str(); 
+    std::string branch_type_str = df->GetColumnType(branch_name); 
     
     // if the type passed is a ROOT type, then we can compare it & the column this way: 
     if (TClass *expected_type = TClass::GetClass(type)) {
     
         // the GetClass() method return nullptr if it's not a ROOT type
-        return TClass::GetClass(branch_type_str) == expected_type; 
+        //std::cout << "Input branch: '" << branch_name << "' with type: '" << branch_type_str << "', with class: '" << TClass::GetClass(branch_type_str.c_str()) << "'\n";
+        //std::cout << "TClass found: '" << expected_type->GetName() << "'. match? " << (expected_type == TClass::GetClass(branch_type_str.c_str()) ? "yes" : "no") << "\n"; 
+        
+        return (TClass::GetClass(branch_type_str.c_str()) == expected_type); 
     }
 
     // if not, we use TDataType for fundamental types: 
-    TDataType* data_type = gROOT->GetType(branch_type_str); 
+    TDataType* data_type = gROOT->GetType(branch_type_str.c_str()); 
+    if (!data_type) {
+        Error(__func__, "Branch '%s' with type '%s' could not be converted to TDataType enum", branch_name.c_str(), branch_type_str);
+        return false; 
+    }
 
-    return (data_type != nullptr) && data_type->GetType() == TDataType::GetType(type);  
+    return (data_type->GetType() == TDataType::GetType(type));  
 }
 //________________________________________________________________________________________________
 void EventDisplayKernel::AddDrawnItem(std::string item_name, const std::function<void(void)>& draw_function)
