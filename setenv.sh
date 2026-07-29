@@ -2,7 +2,7 @@
 
 echo "activating mamba env" 
 
-mamba activate root-env
+mamba activate analyzer-env
 
 # check if the optics libs are in the right paths
 if [[ ! -x "/home/$(whoami)/.local/bin/add-path-to-list" ]]

@@ -17,8 +17,12 @@ set(sources
     src/EventDisplayKernel.cpp
 )
 
-root_generate_dictionary(G__EventDisplay ${headers} LINKDEF LinkDef.h)
-
-add_library(EventDisplay SHARED ${headers} ${sources})
+add_library(EventDisplay SHARED ${sources} ${headers})
 target_include_directories(EventDisplay PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(EventDisplay PUBLIC ROOT::Core ROOT::RIO ROOT::Physics)
+
+root_generate_dictionary(
+    G__EventDisplay ${headers} 
+    MODULE EventDisplay
+    LINKDEF include/LinkDef.h 
+)
