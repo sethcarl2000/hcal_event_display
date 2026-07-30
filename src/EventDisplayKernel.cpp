@@ -421,10 +421,10 @@ void EventDisplayKernel::DoNextEvent()
 //________________________________________________________________________________________________
 void EventDisplayKernel::DoPrevEvent()
 {
-    if (fEventIndex >= 0) {
+    if (fEventIndex > 0) {
         --fEventIndex; 
     } else {
-        Info(__func__, "Cannont load prev. event; %u is already the min. event in the list.", fEventNumbers.front());
+        Info(__func__, "%u is the min. event in the list", fEventNumbers.front());
     }
 
     DrawEventIndex(fEventIndex); 
