@@ -4,8 +4,15 @@
 #include <TBox.h>
 #include <TStyle.h> 
 #include <ROOT/RVec.hxx>
+#include <TColor.h>
 // stdlib headers
 #include <cmath> 
+#include <vector>
+
+
+// given val from 0-1, return greyscale TColor
+Color_t GetGreyscale(double val); 
+
 
 template<typename T> using br_array = ROOT::VecOps::RVec<T>; 
 
@@ -28,8 +35,8 @@ void draw_goodblock_energy()
 
     int n_blocks = blocks_e.size(); 
 
-    double max_energy = 0.2; 
-    double min_energy = 0.0; 
+    double max_energy = 0.05; //GEV
+    double min_energy = 0.00; 
 
     for (int i=0; i<n_blocks; i++) {
 
@@ -42,22 +49,44 @@ void draw_goodblock_energy()
         // get the energy of this block 
         double energy = blocks_e[i]; 
 
-        auto block = new TBox(row-0.5,col-0.5, row+0.5,col+0.5); 
+        auto block = new TBox(
+            row-0.5,col-0.5,    //x1,y1
+            row+0.5,col+0.5     //x2,y2
+        ); 
 
         // Draw the frame for each block that's part of 'goodblocks'
-        block->SetLineColor(kBlack);
-        //set bounds on the energy 
 
+        
         // energy normalized in the range 0-1
         double norm_energy = (energy - min_energy)/(max_energy - min_energy); 
         if (norm_energy > 1.) norm_energy =1.;
         if (norm_energy < 0.) norm_energy =0.; 
 
+        auto color = GetGreyscale(norm_energy); 
         // set the transparency of the block according to the energy 
-        block->SetFillColorAlpha(kBlack, norm_energy); 
+        block->SetFillColor(color);
+        block->SetLineColor(kBlack); 
+
+        
+        //set bounds on the energy 
+        //std::printf("block (row/col, energy, color): %2i/%2i, %5.3f, %i\n", (int)row,(int)col, energy, (int)color); 
 
         //we call this to tell the kernel to draw this object on the canvas (fresh for each event)
         kernel.Draw(block, "SAME"); 
+
+        
+        // now, draw another block do show where the 'gooblocks' are: 
+        auto block_frame =  new TBox(
+            row-0.5,col-0.5,    //x1,y1
+            row+0.5,col+0.5     //x2,y2
+        ); 
+
+        block_frame->SetFillColor(kBlack);
+        block_frame->SetFillStyle(3004);
+        block_frame->SetLineColor(kBlack); 
+        block_frame->SetLineWidth(1); 
+        kernel.Draw(block_frame, "SAME");
+
     }
 }
 //___________________________________________________________________________________________________________
@@ -72,7 +101,7 @@ void test_draw()
     auto& kernel = EventDisplayKernel::Instance(); 
 
     // set the dimensions of the canvas we want to draw
-    kernel.SetCanvasDim(-0.5,-0.5, 12-0.5,24-0.5); 
+    kernel.SetCanvasDim(-0.5,-0.5, 24-0.5,12-0.5); 
 
     // tell the kernel about our function that draws blocks
     kernel.AddDrawnItem("goodblock", draw_goodblock_energy);
@@ -84,3 +113,40 @@ void test_draw()
     // launch the interactive app 
     kernel.LaunchApp(); 
 }
+
+//___________________________________________________________________________________________________________
+//___________________________________________________________________________________________________________
+//___________________________________________________________________________________________________________
+//___________________________________________________________________________________________________________
+
+Color_t GetGreyscale(double val) {
+    constexpr Color_t min_color =19;
+    constexpr Color_t max_color =12;
+    constexpr short color_span = min_color - max_color;
+
+    short color = min_color - ((short)(val * color_span));
+
+    if (color > min_color) color = min_color;
+    if (color < max_color) color = max_color;
+
+    return color; 
+    /*
+    static constexpr int n_colors=100; 
+    static std::vector<TColor> color_list;
+
+    if (color_list.empty()) {
+        for (int i=0; i<n_colors; i++) {
+            double mag = ((double)i)/((double)n_colors-1);
+            color_list.emplace_back(mag,mag,mag);
+        }
+    }
+
+    int index = (int)val*n_colors; 
+    if (index < 0) index =0;
+    if (index > n_colors-1) index =n_colors-1; 
+    
+    return &color_list.at(index); */ 
+}
+
+
+
