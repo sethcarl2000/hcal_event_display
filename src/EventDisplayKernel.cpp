@@ -68,24 +68,7 @@ void EventDisplayKernel::LaunchApp()
 
     fAppState = AppState::kInit; 
 
-    //loop over all drawn functions, to register each of the requested branches
-    for (auto& draw_function : fDrawFunctions) {
-
-        try {
-            fCurrentDrawFunction = draw_function.name; 
-            std::printf("in <EventDisplayKernel::%s>: attempting to evaluate DrawFunction '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
-
-            //try executing the function 
-            draw_function.fcn(); 
-
-        } catch (const std::exception& e) {
-
-            Error(__func__, "Something went wrong evaluating DrawFunction '%s'.\n what(): %s", fCurrentDrawFunction.c_str(), e.what()); 
-            std::exit(1); 
-            return; 
-        }
-    }
-    fCurrentDrawFunction = "none"; 
+    DrawCurrentEvent(); 
     std::cout << "done evaluating all draw functions.\n"; 
     std::cout << "Looping over DataFrame..." << std::flush;
     
@@ -107,6 +90,12 @@ void EventDisplayKernel::LaunchApp()
     std::cout << "done.\n";
 
     fAppState = AppState::kActive; 
+
+    //activate all windows
+    fEventIndex=0; 
+    for (auto& user_window : fUserWindows) {
+        user_window.DrawWindow(); 
+    }
 
     LaunchGUI(1400, 700); 
     // do stuff that actually launches the GUI app...   
@@ -152,7 +141,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                 //do a quick range check 
                 size_t n_events = rptr->size();
                 if (GetEventIndex() >= n_events) {
-                    Error("GetData(run phase)", "<DrawFunction: %s>: Requested event index %zi, but last event index is %zi.", fCurrentDrawFunction.c_str(), GetEventIndex(), n_events); 
+                    Error("GetData(run phase)", "Requested event index %zi, but last event index is %zi.", GetEventIndex(), n_events); 
                     std::exit(1); 
                     return T{};
                 }
@@ -162,9 +151,10 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
             } else {
 
-                Error(  "GetData(run phase)", "<DrawFunction: %s>: Requested branch '%s' appears in tree, but not in app's list of branches. "
-                        "(this shouldn't be possible...)",
-                    fCurrentDrawFunction.c_str(), branch_name.c_str()
+                Error(  "GetData(run phase)", "Requested branch '%s' appears in tree, but not in app's list of branches.\n"
+                        "   Current window / object: %s / %s",
+                    branch_name.c_str(),
+                    fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
                 ); 
                 std::exit(1); 
                 return T{};
@@ -177,14 +167,18 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
             //check if the TTree is ok 
             if (!GetDataFrame()) {
-                Error("GetData(init phase)", "<DrawFunction: %s>: DataFrame is null.", fCurrentDrawFunction.c_str());
+                Error("GetData(init phase)", "DataFrame is null.");
                 std::exit(1);  
                 return T{};
             }
 
             //check if branch exists
             if (!DoesBranchExist(branch_name)) {
-                Error("GetData(init phase)", "<DrawFunction: %s>: Branch '%s' does not exist in tree '%s'", fCurrentDrawFunction.c_str(), branch_name.c_str(), fTreeName.c_str()); 
+                Error("GetData(init phase)", "Branch '%s' does not exist in tree '%s'\n"
+                "   Current window / object: %s / %s\n", 
+                branch_name.c_str(), fTreeName.c_str(),
+                fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+            ); 
                 std::exit(1);  
                 return T{};
             }
@@ -209,11 +203,13 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                 } 
 
 
-                Error("GetData(init phase)", "<DrawFunction: %s>: Branch '%s' is reported as having type '%s', but this function was invoked with type '%s'.",
-                    fCurrentDrawFunction.c_str(), 
+                Error(  
+                    "GetData(init phase)", "Branch '%s' is reported as having type '%s', but this function was invoked with type '%s'.\n"
+                    "   Current window / object: %s / %s",
                     branch_name.c_str(), 
                     branch_type.c_str(), 
-                    (requested_class_name != nullptr ? requested_class_name : "null")
+                    (requested_class_name != nullptr ? requested_class_name : "null"),
+                    fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
                 );
                 std::exit(1); 
                 return T{};
@@ -234,7 +230,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
 
                 //let the user know this branch was added successfully 
-                std::printf("in <EventDisplayKernel::GetData(init phase)>: <DrawFunction: %s>: Requested branch '%s' added.\n", fCurrentDrawFunction.c_str(), branch_name.c_str());
+                std::printf("in <EventDisplayKernel::GetData(init phase)>: Requested branch '%s' added. \n", branch_name.c_str());
             }
 
             break; 
@@ -297,60 +293,60 @@ bool EventDisplayKernel::BranchTypeMatches(std::string branch_name, const std::t
     return (data_type->GetType() == TDataType::GetType(type));  
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::AddDrawnItem(std::string item_name, const std::function<void(void)>& draw_function)
-{
-    //check to make sure another item with this same name is not already present. 
-    auto find_it = std::find_if(fDrawFunctions.begin(), fDrawFunctions.end(), [item_name](const DrawFunction& rhs){ return rhs.name == item_name; });
-    if (find_it != fDrawFunctions.end()) {
-        Warning(__func__, "User attepmted to add DrawFunction '%s', but this already exists in list (duplicate will not be added).", item_name.c_str());
-        return;  
-    }
-
-    //add this function to list of drawin functions
-    fDrawFunctions.emplace_back( item_name, draw_function, true ); 
-
-    std::printf("Added drawn item '%s'.\n", item_name.c_str()); 
-}
-//________________________________________________________________________________________________
 void EventDisplayKernel::Draw(TObject* object, const char* option)
 {
-    
+    if (fCurrentUserWindow == nullptr) {
+        Warning(__func__, 
+            "Cannot draw object, current user window is null.\n"
+            "   Current window / object: %s / %s\n", 
+            fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+        ); 
+        return; 
+    }
+
+    if (!object) {
+        Warning(__func__, 
+            "Object called to be drawn is nullptr, and thus cannot be drawn. was it properly initailzied?\n"
+            "   Current window / object: %s / %s",
+            fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+        ); 
+        return; 
+    }
+
+    //set ownership over this object (so that ROOT doesn't have to manage it itself).
+    object->SetBit(kMustCleanup); 
+    object->ResetBit(kCanDelete); 
+
+    // check to see if this is a histogram (in ROOT, all histogram types inherit from TH1)
+    // if so, make sure that we have ownership of it (we control when it is deleted). 
+    if (object->IsA()->InheritsFrom( TClass::GetClass<TH1>() )) {
+
+        auto th1 = dynamic_cast<TH1*>(object); 
+        if (th1 == nullptr) {
+            //dynamic cast failed, for some reason: 
+            Error(__func__, 
+                "Dynamic cast of TObject* to TH1* failed, even though this object inherits from TH1 (and thus this should have succeeded).\n"
+                "   Current window / object: %s / %s",
+                fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+            ); 
+            std::exit(1);
+        }
+        th1->SetDirectory(nullptr); 
+    }
+
     if (fAppState == AppState::kActive) {
         
-        if (!object) {
-            Warning(__func__, "<DrawFunction: %s>: Object called to be drawn is nullptr, and thus cannot be drawn. was it properly initailzied?", fCurrentDrawFunction.c_str()); 
-            return; 
-        }
-        //set ownership over this object (so that ROOT doesn't have to manage it itself).
-        object->SetBit(kMustCleanup); 
-        object->ResetBit(kCanDelete); 
+        fCurrentUserWindow->cd(); 
+        fCurrentUserWindow->AddPrimitive(object); 
 
-        // check to see if this is a histogram (in ROOT, all histogram types inherit from TH1)
-        // if so, make sure that we have ownership of it (we control when it is deleted). 
-        if (object->IsA()->InheritsFrom( TClass::GetClass<TH1>() )) {
-
-            auto th1 = dynamic_cast<TH1*>(object); 
-            if (th1 == nullptr) {
-                //dynamic cast failed, for some reason: 
-                Error(__func__, 
-                    "<DrawFunction: %s>: Dynamic cast of TObject* to TH1* failed, even though this object inherits from TH1"
-                    " (and thus this should have succeeded). object name: '%s'", fCurrentDrawFunction.c_str(), object->GetName());
-                std::exit(1);
-            }
-            th1->SetDirectory(nullptr); 
-        }
-
-        fPrimitiveList.Add(object); 
+        auto canv = GetCanvas(); 
+        canv->cd(); 
         object->Draw(option); 
         return; 
     
     } else {
 
-        if (object) { 
-            object->SetBit(kMustCleanup); 
-            object->ResetBit(kCanDelete); 
-            delete object; 
-        }
+        delete object; 
     }
 }
 //________________________________________________________________________________________________
@@ -376,7 +372,7 @@ void EventDisplayKernel::LaunchGUI(UInt_t w, UInt_t h)
 
     SetCleanup(kDeepCleanup); 
 
-    fFrame_canv = new TGHorizontalFrame(this, w, h); 
+    /*fFrame_canv = new TGHorizontalFrame(this, w, h); 
 
     fECanvas = new TRootEmbeddedCanvas("ECanvas_data", fFrame_canv, w, h); 
 
@@ -388,7 +384,7 @@ void EventDisplayKernel::LaunchGUI(UInt_t w, UInt_t h)
     fFrame_canv->AddFrame(fECanvas, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX | kLHintsCenterX, 0,0,0,5)); 
 
     AddFrame(fFrame_canv, new TGLayoutHints(kLHintsTop | kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0)); 
-
+    */ 
 
     //now, we can start adding buttons
     fFrame_buttons = new TGHorizontalFrame(this, w, 50);
@@ -428,11 +424,9 @@ TCanvas* EventDisplayKernel::GetCanvas()
 {
     if (fAppState != AppState::kActive) return nullptr; 
 
-    if (fECanvas && fECanvas->GetCanvas()) {
-        return fECanvas->GetCanvas(); 
-    }
+    if (fCurrentCanvas) return fCurrentCanvas; 
 
-    Error(__func__, "Embedded canvas (%p) and / or TCanvas it contains (%p) are null.", fECanvas, (fECanvas ? fECanvas->GetCanvas() : nullptr)); 
+    Error(__func__, "Current canvas (%p) is null.", fCurrentCanvas); 
     std::exit(1); 
 }
 //________________________________________________________________________________________________
@@ -444,7 +438,7 @@ void EventDisplayKernel::DoNextEvent()
         Info(__func__, "Cannont load next event; %u is already the max. event in the list.", fEventNumbers.back());
     }
 
-    DrawEventIndex(fEventIndex); 
+    DrawCurrentEvent(); 
 }
 //________________________________________________________________________________________________
 void EventDisplayKernel::DoPrevEvent()
@@ -455,7 +449,7 @@ void EventDisplayKernel::DoPrevEvent()
         Info(__func__, "%u is the min. event in the list", fEventNumbers.front());
     }
 
-    DrawEventIndex(fEventIndex); 
+    DrawCurrentEvent(); 
 }
 //________________________________________________________________________________________________
 void EventDisplayKernel::DrawEventIndex(size_t index)
@@ -467,35 +461,54 @@ void EventDisplayKernel::DrawEventIndex(size_t index)
     }
 
     fEventIndex = index; 
-    fEventNumber = fEventNumbers[index]; 
-
-    std::printf("drawing event %u...", fEventNumber);
-
-    //delete all drawn events. 
-    fPrimitiveList.Delete(); 
-
-    //now, clear the canvas (in case the user modified it)
-    auto canv = GetCanvas(); 
-
-    canv->Clear(); 
-    canv->cd(); 
-
-    if (!canv) {
-        Error(__func__, "Ptr to embedded canvas is null.");
-        std::exit(1); 
-    }
-
-    //run each (active) event-drawing function (in order!)
-    for (const auto& draw_function : fDrawFunctions) {
-        if(draw_function.is_active) { draw_function.fcn(); } 
-    }
-
-    canv->Modified(); 
-    canv->Update(); 
-
+    fEventNumber = fEventNumbers[index];
+    
+    std::cout << "drawing event "<<fEventNumber<<"..." << std::flush; 
+    DrawCurrentEvent(); 
     std::cout << "done.\n" << std::flush; 
 }
 //________________________________________________________________________________________________
+void EventDisplayKernel::DrawCurrentEvent()
+{
+    std::printf("drawing event %u...", fEventNumber);
+
+    //run each (active) event-drawing function (in order!)
+    /*for (const auto& draw_function : fDrawFunctions) {
+        if(draw_function.is_active) { draw_function.fcn(); } 
+    }*/ 
+    //loop over all drawn functions, to register each of the requested branches
+    for (auto& user_window : fUserWindows) {
+
+        //if the winow is inactive, skip it. 
+        if (!user_window.IsActive()) continue; 
+
+        try {
+
+            //tell this user window that its canvas is the active one. 
+            // this is important, because users may ask the kernel for access to the current canvas, and this method
+            // makes sure that they are given the correct one corresponding to this window. 
+            user_window.cd(); 
+
+#ifdef DEBUG
+            Info(__func__, "Trying to draw UserWindow: %s", user_window.c_str()); 
+#endif
+            //std::printf("in <EventDisplayKernel::%s>: attempting to evaluate DrawFunction '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
+
+            user_window.DrawObjects(); 
+
+        } catch (const std::exception& e) {
+
+            Error(__func__, 
+                "Exception caught drawing window '%s'.\n"
+                "   Current window / object: %s / %s"
+                "\n what(): %s", 
+                user_window.GetName().c_str(), fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str(), e.what()); 
+            std::exit(1); 
+            return; 
+        }
+    }
+
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

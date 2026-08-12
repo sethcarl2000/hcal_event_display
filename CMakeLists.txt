@@ -10,23 +10,31 @@ find_package(ROOT 6.20 REQUIRED COMPONENTS Core RIO Physics)
 
 set(headers
     include/EventDisplayKernel.hpp
+    include/DrawFunction.hpp
+    include/AppDrawFunction.hpp 
+    include/UserApp.hpp
+    include/UserWindow.hpp
+    include/PrivateMessenger.hpp
 )
 
 set(sources
     src/EventDisplayKernel.cpp
+    src/UserApp.cpp
+    src/UserWindow.cpp
+    src/PrivateMessenger.cpp
 )
 
 add_library(EventDisplay SHARED ${sources} ${headers})
 target_include_directories(EventDisplay PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(EventDisplay PUBLIC ROOT::Core ROOT::RIO ROOT::Physics)
 
+# root_generate_dictionary(
+#    G__EventDisplay ${headers} 
+#    MODULE EventDisplay
+#    LINKDEF include/LinkDef.h 
+#)
+
 option(DEBUG "Enable GUI debug printing" OFF)
 if (DEBUG)
     target_compile_definitions(DEBUG)
 endif()
-
-root_generate_dictionary(
-    G__EventDisplay ${headers} 
-    MODULE EventDisplay
-    LINKDEF include/LinkDef.h 
-)

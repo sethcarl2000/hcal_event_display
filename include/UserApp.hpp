@@ -1,7 +1,15 @@
 #ifndef UserApp_hpp
 #define UserApp_hpp
 
+#include <AppDrawFunction.hpp>
+#include <DrawFunction.hpp>
+//TGUI headers
 #include <TGFrame.h>
+#include <TRootEmbeddedCanvas.h> 
+//ROOT headers
+#include <TCanvas.h> 
+#include <TObject.h> 
+//stdlib headers
 #include <functional> 
 
 class UserWindow; 
@@ -12,15 +20,20 @@ private:
     //parent class 
     UserWindow* fParent; 
 
+    TRootEmbeddedCanvas *fECanvas; 
+
 public: 
     UserApp(
         UserWindow* parent, 
         const TGWindow* ptr, 
         UInt_t w, UInt_t h, 
-        const std::function<void(UserApp*)>& app_draw_fcn
+        const AppDrawFunction& app_draw_fcn
     );
 
-    ~UserApp(); 
+    ~UserApp();     
+
+    // get the canvas on which objects are drawn in this sub-window. 
+    TCanvas* GetCanvas(); 
 
     // Override of TGMainFrame's 'CloseWindow' function. We must modify it so that closing this window does not close the whole application. 
     void CloseWindow() override; 

@@ -2,6 +2,7 @@
 #define EventDisplayKernel_hpp
 
 #include <DrawFunction.hpp>
+#include <UserWindow.hpp>
 // TGUI headers
 #include <TGFrame.h>
 #include <TGWindow.h>
@@ -16,6 +17,7 @@
 #include <TTree.h> 
 #include <ROOT/RDataFrame.hxx>
 #include <TCanvas.h> 
+#include <TPad.h> 
 // stdlib headers
 #include <vector>
 #include <string> 
@@ -35,13 +37,12 @@ enum class dtype {
 
 //implementing this class as a meyer's singleton 
 class EventDisplayKernel : public TGMainFrame {
+public: 
+    enum class AppState { kNone=0, kInit, kActive };
 private: 
 
     //constructor 
     EventDisplayKernel(); 
-
-    //list of all drawn primitives
-    TList fPrimitiveList; 
 
     std::unique_ptr<ROOT::RDataFrame> fDataFrame{nullptr}; 
 
@@ -51,7 +52,6 @@ private:
     /// List of branches available in the TTree
     std::vector<std::string> fBranchList{}; 
 
-    enum class AppState { kNone=0, kInit, kActive };
     AppState fAppState{AppState::kNone}; 
 
     std::string fFilePath{""}, fTreeName{""}; 
@@ -61,6 +61,8 @@ private:
     /// @return 'true' if branch exists, 'false' otherwise. 
     bool DoesBranchExist(std::string branch) const; 
 
+    //resets each user window's canvases, and draws the current event.  
+    void DrawCurrentEvent(); 
 
     /// @brief Check to seee if the type of a branch matches a given type
     /// @param branch_name name of branch in RDataFrame
@@ -69,7 +71,10 @@ private:
     bool BranchTypeMatches(std::string branch_name, const std::type_info& type); 
 
     
-    std::vector<DrawFunction> fDrawFunctions; 
+    //std::vector<DrawFunction> fDrawFunctions; 
+    
+    //list of user-windows to draw
+    std::vector<UserWindow> fUserWindows; 
 
     //the 'event index', which starts from '0' and goes in order until 'n_events-1'.  
     size_t fEventIndex; 
@@ -77,8 +82,8 @@ private:
 
     ROOT::VecOps::RVec<UInt_t> fEventNumbers; 
 
-    inline size_t GetEventIndex() const { return fEventIndex; } 
 
+    inline size_t GetEventIndex() const { return fEventIndex; } 
 
     //Launches GUI 
     void LaunchGUI(UInt_t w, UInt_t h);
@@ -93,8 +98,13 @@ private:
 
 
     // GUI items
-    TGHorizontalFrame *fFrame_canv;      
-    TRootEmbeddedCanvas *fECanvas; 
+    //TGHorizontalFrame *fFrame_canv;      
+    //TRootEmbeddedCanvas *fECanvas; 
+    TCanvas *fCurrentCanvas{nullptr}; 
+    //currently active window
+    UserWindow* fCurrentUserWindow{nullptr}; 
+
+    std::string fCurrentObjDrawFunctionName{"none"}, fCurrentAppDrawFunctionName{"none"}; 
 
     TGHorizontalFrame *fFrame_buttons; 
     TGTextButton *fGButton_next, *fGButton_prev; 
@@ -105,6 +115,8 @@ private:
 
     //this variable stores the name of the current user-defined draw funciton. 
     std::string fCurrentDrawFunction{"none"}; 
+
+    friend class PrivateMessenger; 
 
 public: 
 
@@ -121,6 +133,9 @@ public:
         return instance; 
     }
 
+    /// @return current app state (none, init, active)
+    inline AppState GetAppState() const { return fAppState; }
+
     // set the input file
     inline void SetFile(std::string path_file) { fFilePath=path_file; }; 
 
@@ -129,9 +144,6 @@ public:
 
     //Launch interactive app 
     void LaunchApp();
-
-    //Add drawn objects. 
-    void AddDrawnItem(std::string item_name, const std::function<void(void)>& draw_function);
 
     //Request to fetch a specific branch from the TTree
     template<typename T> T GetData(std::string branch_name); 
@@ -155,7 +167,6 @@ public:
 
     void CloseWindow(); 
 
-    ClassDef(EventDisplayKernel,1); 
 }; 
 
 
