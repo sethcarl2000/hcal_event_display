@@ -26,6 +26,8 @@ add_path_to_list () {
     echo "${path_list}"
 }
 
+export CMAKE_PREFIX_PATH="${CONDA_PREFIX}"
+
 # check if the optics libs are in the right paths
 if [[ -x "/home/$(whoami)/.local/bin/add-path-to-list" ]]
 then 
