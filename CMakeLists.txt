@@ -8,7 +8,6 @@ project(HCalEventDisplay VERSION 0.1 LANGUAGES CXX)
 # 
 find_package(ROOT 6.20 REQUIRED COMPONENTS Core RIO Physics)
 
-
 set(headers
     include/EventDisplayKernel.hpp
 )
@@ -20,6 +19,11 @@ set(sources
 add_library(EventDisplay SHARED ${sources} ${headers})
 target_include_directories(EventDisplay PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(EventDisplay PUBLIC ROOT::Core ROOT::RIO ROOT::Physics)
+
+option(DEBUG "Enable GUI debug printing" OFF)
+if (DEBUG)
+    target_compile_definitions(DEBUG)
+endif()
 
 root_generate_dictionary(
     G__EventDisplay ${headers} 
