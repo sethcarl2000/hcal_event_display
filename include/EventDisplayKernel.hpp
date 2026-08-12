@@ -1,6 +1,7 @@
 #ifndef EventDisplayKernel_hpp
 #define EventDisplayKernel_hpp
 
+#include <DrawFunction.hpp>
 // TGUI headers
 #include <TGFrame.h>
 #include <TGWindow.h>
@@ -18,7 +19,6 @@
 // stdlib headers
 #include <vector>
 #include <string> 
-#include <functional> 
 #include <vector> 
 #include <memory> 
 #include <typeinfo> 
@@ -32,15 +32,6 @@ enum class dtype {
     // unsigned integer
     uint
 }; 
-
-struct draw_fcn_and_state_t { 
-    std::string name; 
-    std::function<void(void)> fcn; 
-    bool is_active{false}; 
-};
-
-//this lets us check if two structs are the same 
-inline bool operator==(const draw_fcn_and_state_t& lhs, const draw_fcn_and_state_t& rhs) { return lhs.name == rhs.name; }
 
 //implementing this class as a meyer's singleton 
 class EventDisplayKernel : public TGMainFrame {
@@ -78,7 +69,7 @@ private:
     bool BranchTypeMatches(std::string branch_name, const std::type_info& type); 
 
     
-    std::vector<draw_fcn_and_state_t> fDrawFunctions; 
+    std::vector<DrawFunction> fDrawFunctions; 
 
     //the 'event index', which starts from '0' and goes in order until 'n_events-1'.  
     size_t fEventIndex; 
