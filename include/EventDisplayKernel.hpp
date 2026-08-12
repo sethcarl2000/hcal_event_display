@@ -77,8 +77,6 @@ private:
     /// @return 'true' if type of branch is compatible with type_info, 'false' otherwise. Aborts program if RDataFrame is null, reports error if column is absent. 
     bool BranchTypeMatches(std::string branch_name, const std::type_info& type); 
 
-
-
     
     std::vector<draw_fcn_and_state_t> fDrawFunctions; 
 
@@ -114,6 +112,8 @@ private:
     //dimensions of canvas to draw. 
     double fX0{-24.*15./2.}, fY0{-12.*15./2.}, fX1{+24.*15./2.}, fY1{+12.*15./2.}; 
 
+    //this variable stores the name of the current user-defined draw funciton. 
+    std::string fCurrentDrawFunction{"none"}; 
 
 public: 
 
@@ -151,7 +151,8 @@ public:
     //dimensions of canvas to be drawn. 
     inline void SetCanvasDim(double x0, double y0, double x1, double y1) { fX0=x0; fX1=x1; fY0=y0; fY1=y1; }; 
 
-    //Get the canvas contained by the embeddded canvas
+    /// @brief Returns canvas on which the current objects are being drawn 
+    /// @return ptr to canvas on which objects are being drawn. nullptr if it does not exist
     TCanvas* GetCanvas(); 
 
     //the 'event number', as it appears in the rootfile

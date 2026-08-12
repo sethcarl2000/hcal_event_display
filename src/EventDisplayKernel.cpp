@@ -23,6 +23,10 @@
 #include <map> 
 #include <algorithm> 
 
+#ifdef DEBUG
+constexpr char classname[] = "EventDisplayKernel"; 
+#endif
+
 namespace inst_helpers {
     template<typename T> std::string GetBranchCode(); 
 }
@@ -30,12 +34,18 @@ namespace inst_helpers {
 //________________________________________________________________________________________________
 EventDisplayKernel::EventDisplayKernel()
 {
+#ifdef DEBUG
+    std::cout << "in <"<<classname<<"> in constructor.\n"; 
+#endif
     //set the app state
     fAppState = AppState::kNone; 
 }
 //________________________________________________________________________________________________
 void EventDisplayKernel::LaunchApp()
 {
+#ifdef DEBUG
+    std::cout << "in <"<<classname<<"::"<<__func__<<"> in body.\n"; 
+#endif
     //try and open the TFile
     try {
         
@@ -62,18 +72,20 @@ void EventDisplayKernel::LaunchApp()
     for (auto& draw_function : fDrawFunctions) {
 
         try {
-            std::printf("in <EventDisplayKernel::%s>: attempting to evaluate function '%s'...\n", __func__, draw_function.name.c_str()); 
+            fCurrentDrawFunction = draw_function.name; 
+            std::printf("in <EventDisplayKernel::%s>: attempting to evaluate draw-function '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
 
             //try executing the function 
             draw_function.fcn(); 
 
         } catch (const std::exception& e) {
 
-            Error(__func__, "Something went wrong evaluating draw-function for '%s'.\n what(): %s", draw_function.name.c_str(), e.what()); 
+            Error(__func__, "Something went wrong evaluating draw-function '%s'.\n what(): %s", fCurrentDrawFunction.c_str(), e.what()); 
             std::exit(1); 
             return; 
         }
     }
+    fCurrentDrawFunction = "none"; 
     std::cout << "done evaluating all draw functions.\n"; 
     std::cout << "Looping over DataFrame..." << std::flush;
     
@@ -123,7 +135,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
     static std::map<std::string, ROOT::RDF::RResultPtr<std::vector<T>>> fBranches; 
 
     // we need to be able to return a 'default constructed' version of this object (i.e. empty vector, or '0' if its an int / float)
-    static_assert(std::is_default_constructible_v<T>, "Template arg 'T' is not trivially constructable");
+    static_assert(std::is_default_constructible_v<T>, "Template arg 'T' is not default constructable");
 
     //first, check the status of the app. 
     switch (fAppState) {
@@ -140,7 +152,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                 //do a quick range check 
                 size_t n_events = rptr->size();
                 if (GetEventIndex() >= n_events) {
-                    Error("GetData(run phase)", "Requested event index %zi, but last event index is %zi.", GetEventIndex(), n_events); 
+                    Error("GetData(run phase)", "<draw-function: %s>: Requested event index %zi, but last event index is %zi.", fCurrentDrawFunction.c_str(), GetEventIndex(), n_events); 
                     std::exit(1); 
                     return T{};
                 }
@@ -150,9 +162,9 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
             } else {
 
-                Error(  "GetData(run phase)", "Requested branch '%s' appears in tree, but not in app's list of branches. "
+                Error(  "GetData(run phase)", "<draw-function: %s>: Requested branch '%s' appears in tree, but not in app's list of branches. "
                         "(this shouldn't be possible...)",
-                    branch_name.c_str()
+                    fCurrentDrawFunction.c_str(), branch_name.c_str()
                 ); 
                 std::exit(1); 
                 return T{};
@@ -165,14 +177,14 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
             //check if the TTree is ok 
             if (!GetDataFrame()) {
-                Error("GetData(init phase)", "DataFrame is null.");
+                Error("GetData(init phase)", "<draw-function: %s>: DataFrame is null.", fCurrentDrawFunction.c_str());
                 std::exit(1);  
                 return T{};
             }
 
             //check if branch exists
             if (!DoesBranchExist(branch_name)) {
-                Error("GetData(init phase)", "Branch '%s' does not exist in tree '%s'", branch_name.c_str(), fTreeName.c_str()); 
+                Error("GetData(init phase)", "<draw-function: %s>: Branch '%s' does not exist in tree '%s'", fCurrentDrawFunction.c_str(), branch_name.c_str(), fTreeName.c_str()); 
                 std::exit(1);  
                 return T{};
             }
@@ -197,7 +209,8 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                 } 
 
 
-                Error("GetData(init phase)", "Branch '%s' is reported as having type '%s', but this function was invoked with type '%s'.",
+                Error("GetData(init phase)", "<draw-function: %s>: Branch '%s' is reported as having type '%s', but this function was invoked with type '%s'.",
+                    fCurrentDrawFunction.c_str(), 
                     branch_name.c_str(), 
                     branch_type.c_str(), 
                     (requested_class_name != nullptr ? requested_class_name : "null")
@@ -221,7 +234,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
 
                 //let the user know this branch was added successfully 
-                std::printf("in <EventDisplayKernel::GetData(init phase)>: Requested branch '%s' added.\n", branch_name.c_str());
+                std::printf("in <EventDisplayKernel::GetData(init phase)>: <draw-function: %s>: Requested branch '%s' added.\n", fCurrentDrawFunction.c_str(), branch_name.c_str());
             }
 
             break; 
@@ -277,7 +290,7 @@ bool EventDisplayKernel::BranchTypeMatches(std::string branch_name, const std::t
     // if not, we use TDataType for fundamental types: 
     TDataType* data_type = gROOT->GetType(branch_type_str.c_str()); 
     if (!data_type) {
-        Error(__func__, "Branch '%s' with type '%s' could not be converted to TDataType enum", branch_name.c_str(), branch_type_str);
+        Error(__func__, "Branch '%s' with type '%s' could not be converted to TDataType enum", branch_name.c_str(), branch_type_str.c_str());
         return false; 
     }
 
@@ -289,7 +302,7 @@ void EventDisplayKernel::AddDrawnItem(std::string item_name, const std::function
     //check to make sure another item with this same name is not already present. 
     auto find_it = std::find_if(fDrawFunctions.begin(), fDrawFunctions.end(), [item_name](const draw_fcn_and_state_t& rhs){ return rhs.name == item_name; });
     if (find_it != fDrawFunctions.end()) {
-        Warning(__func__, "User attepmted to add drawn item '%s', but this already exists in list (duplicate will not be added).", item_name.c_str());
+        Warning(__func__, "User attepmted to add draw-function '%s', but this already exists in list (duplicate will not be added).", item_name.c_str());
         return;  
     }
 
@@ -305,12 +318,27 @@ void EventDisplayKernel::Draw(TObject* object, const char* option)
     if (fAppState == AppState::kActive) {
         
         if (!object) {
-            Warning(__func__, "Object called to be drawn is null."); 
+            Warning(__func__, "<draw-function: %s>: Object called to be drawn is nullptr, and thus cannot be drawn. was it properly initailzied?", fCurrentDrawFunction.c_str()); 
             return; 
         }
         //set ownership over this object (so that ROOT doesn't have to manage it itself).
         object->SetBit(kMustCleanup); 
         object->ResetBit(kCanDelete); 
+
+        // check to see if this is a histogram (in ROOT, all histogram types inherit from TH1)
+        // if so, make sure that we have ownership of it (we control when it is deleted). 
+        if (object->IsA()->InheritsFrom( TClass::GetClass<TH1>() )) {
+
+            auto th1 = dynamic_cast<TH1*>(object); 
+            if (th1 == nullptr) {
+                //dynamic cast failed, for some reason: 
+                Error(__func__, 
+                    "<draw-function: %s>: Dynamic cast of TObject* to TH1* failed, even though this object inherits from TH1"
+                    " (and thus this should have succeeded). object name: '%s'", fCurrentDrawFunction.c_str(), object->GetName());
+                std::exit(1);
+            }
+            th1->SetDirectory(nullptr); 
+        }
 
         fPrimitiveList.Add(object); 
         object->Draw(option); 
@@ -446,12 +474,22 @@ void EventDisplayKernel::DrawEventIndex(size_t index)
     //delete all drawn events. 
     fPrimitiveList.Delete(); 
 
+    //now, clear the canvas (in case the user modified it)
+    auto canv = GetCanvas(); 
+
+    canv->Clear(); 
+    canv->cd(); 
+
+    if (!canv) {
+        Error(__func__, "Ptr to embedded canvas is null.");
+        std::exit(1); 
+    }
+
     //run each (active) event-drawing function (in order!)
     for (const auto& draw_function : fDrawFunctions) {
         if(draw_function.is_active) { draw_function.fcn(); } 
     }
 
-    auto canv = GetCanvas(); 
     canv->Modified(); 
     canv->Update(); 
 
