@@ -111,13 +111,13 @@ void UserWindow::DrawObjects()
         //don't draw deactivated objects 
         if (obj_draw_fcn.is_active == false) { 
 #ifdef DEBUG
-        Info(__func__, "<UserWindow: %s>: obj-draw function '%s' deactivated; not drawing.", GetName().c_str(), obj_draw_fcn.c_str()); 
+        Info(__func__, "<UserWindow: %s>: obj-draw function '%s' deactivated; not drawing.", GetName().c_str(), obj_draw_fcn.name.c_str()); 
 #endif
             continue;            
         } 
 
 #ifdef DEBUG
-        Info(__func__, "<UserWindow: %s>: drawing obj-draw function '%s'", GetName().c_str(), obj_draw_fcn.c_str()); 
+        Info(__func__, "<UserWindow: %s>: drawing obj-draw function '%s'", GetName().c_str(), obj_draw_fcn.name.c_str()); 
 #endif
         PrivateMessenger::SetObjDrawFunctionName(obj_draw_fcn.name); 
         obj_draw_fcn(); 

@@ -20,26 +20,29 @@ class UserWindow {
 private: 
 
     //list of all drawn primitives
-    TList fPrimitiveList; 
+    TList fPrimitiveList{}; 
 
     //'name', which uniquely identifies this window. 
-    std::string fName; 
+    std::string fName{"null"}; 
 
     //the 'app' this window actually owns
-    UserApp* fApp; 
+    UserApp* fApp{nullptr}; 
 
-    TRootEmbeddedCanvas *fECanvas; 
+    TRootEmbeddedCanvas *fECanvas{nullptr}; 
 
     // this is the user-supplied function which is responsible for actually drawing the user-defined window. It must define a canvas!  
-    AppDrawFunction fAppDrawFunction; 
+    AppDrawFunction fAppDrawFunction{}; 
 
-    std::vector<DrawFunction> fDrawFunctions; 
+    std::vector<DrawFunction> fDrawFunctions{}; 
 
     UInt_t fWidth{800}, fHeight{500}; 
 
 public: 
 
-    UserWindow(const std::string& name, const AppDrawFunction& draw_app_fcn); 
+    UserWindow(const std::string& name="null", const AppDrawFunction& draw_app_fcn={}); 
+
+    //default copy-constructor
+    UserWindow(const UserWindow&) = delete; 
 
     ~UserWindow(); 
 
@@ -74,6 +77,8 @@ public:
     inline void AddPrimitive(TObject* obj) { fPrimitiveList.Add(obj); } 
 
 };
+
+static_assert(std::is_default_constructible_v<UserWindow>);
 
 // equivalence operator for two 'UserWindow' instances 
 inline bool operator==(const UserWindow& lhs, const UserWindow& rhs) { return lhs.GetName() == rhs.GetName(); } 

@@ -5,8 +5,8 @@
 #include <string> 
 
 struct DrawFunction {
-    std::string name; 
-    std::function<void(void)> fcn; 
+    std::string name{}; 
+    std::function<void(void)> fcn{[](){}}; 
     bool is_active{false}; 
     
     inline void operator()(void) const { fcn(); }

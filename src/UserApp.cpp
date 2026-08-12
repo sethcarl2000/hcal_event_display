@@ -10,7 +10,9 @@
 #include <stdexcept> 
 
 #ifdef DEBUG
-constexpr char classname[] = "UserApp"; 
+namespace {
+    constexpr char classname[] = "UserApp"; 
+}
 #endif
 
 //__________________________________________________________________________________________________________________________
@@ -29,9 +31,9 @@ UserApp::UserApp(UserWindow* parent, const TGWindow* ptr, UInt_t w, UInt_t h, co
     try {
 
 #ifdef DEBUG
-    Info(__func__, "<UserWindow: %s>: In UserApp constructor. Attempting execution of construction function...", window_name); 
+        Info(__func__, "<UserWindow: %s>: In UserApp constructor. Attempting execution of construction function...", window_name); 
 #endif  
-        PrivateMessenger::SetAppDrawFunctionName(fParent->GetName().c_str()); 
+        PrivateMessenger::SetAppDrawFunctionName(fParent->GetName()); 
         app_draw_fcn(this, fECanvas); 
         PrivateMessenger::SetAppDrawFunctionName("none"); 
 
@@ -86,6 +88,7 @@ TCanvas* UserApp::GetCanvas()
     return fECanvas->GetCanvas(); 
 }
 //__________________________________________________________________________________________________________________________
+std::string UserApp::GetWindowName() { return (fParent == nullptr) ? "null" : fParent->GetName(); }
 //__________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________

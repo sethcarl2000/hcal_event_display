@@ -44,6 +44,9 @@ private:
     //constructor 
     EventDisplayKernel(); 
 
+    //destructor 
+    ~EventDisplayKernel(); 
+
     std::unique_ptr<ROOT::RDataFrame> fDataFrame{nullptr}; 
 
     //return access to the above ptr (or throw an exception if it's null)
@@ -74,7 +77,7 @@ private:
     //std::vector<DrawFunction> fDrawFunctions; 
     
     //list of user-windows to draw
-    std::vector<UserWindow> fUserWindows; 
+    std::vector<std::unique_ptr<UserWindow>> fUserWindows{}; 
 
     //the 'event index', which starts from '0' and goes in order until 'n_events-1'.  
     size_t fEventIndex; 
@@ -120,18 +123,12 @@ private:
 
 public: 
 
-    //destructor 
-    ~EventDisplayKernel(); 
-
     //delete copy constructor & copy assign. operator 
     EventDisplayKernel(const EventDisplayKernel&) = delete; 
     EventDisplayKernel& operator=(const EventDisplayKernel&) = delete; 
 
     //Access to single, static instance 
-    static inline EventDisplayKernel& Instance() { 
-        static EventDisplayKernel instance; 
-        return instance; 
-    }
+    static EventDisplayKernel& Instance(); 
 
     /// @return current app state (none, init, active)
     inline AppState GetAppState() const { return fAppState; }
@@ -141,6 +138,9 @@ public:
 
     // set the tree name
     inline void SetTreeName(std::string tree_name) { fTreeName=tree_name; }; 
+
+    // add a new user-defined window
+    void AddUserWindow(std::unique_ptr<UserWindow> window);
 
     //Launch interactive app 
     void LaunchApp();

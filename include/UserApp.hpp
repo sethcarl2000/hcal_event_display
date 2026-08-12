@@ -35,6 +35,11 @@ public:
     // get the canvas on which objects are drawn in this sub-window. 
     TCanvas* GetCanvas(); 
 
+    /// @return ptr to parent 'UserWindow' 
+    inline UserWindow* GetParent() { return fParent; } 
+
+    std::string GetWindowName();
+
     // Override of TGMainFrame's 'CloseWindow' function. We must modify it so that closing this window does not close the whole application. 
     void CloseWindow() override; 
 

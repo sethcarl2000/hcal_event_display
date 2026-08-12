@@ -32,6 +32,12 @@ namespace inst_helpers {
 }
 
 //________________________________________________________________________________________________
+//Access to single, static instance 
+EventDisplayKernel& EventDisplayKernel::Instance() { 
+    static EventDisplayKernel instance; 
+    return instance; 
+}
+//________________________________________________________________________________________________
 EventDisplayKernel::EventDisplayKernel()
 {
 #ifdef DEBUG
@@ -94,7 +100,7 @@ void EventDisplayKernel::LaunchApp()
     //activate all windows
     fEventIndex=0; 
     for (auto& user_window : fUserWindows) {
-        user_window.DrawWindow(); 
+        user_window->DrawWindow(); 
     }
 
     LaunchGUI(1400, 700); 
@@ -480,21 +486,21 @@ void EventDisplayKernel::DrawCurrentEvent()
     for (auto& user_window : fUserWindows) {
 
         //if the winow is inactive, skip it. 
-        if (!user_window.IsActive()) continue; 
+        if (!user_window || !user_window->IsActive()) continue; 
 
         try {
 
             //tell this user window that its canvas is the active one. 
             // this is important, because users may ask the kernel for access to the current canvas, and this method
             // makes sure that they are given the correct one corresponding to this window. 
-            user_window.cd(); 
+            user_window->cd(); 
 
 #ifdef DEBUG
-            Info(__func__, "Trying to draw UserWindow: %s", user_window.c_str()); 
+            Info(__func__, "Trying to draw UserWindow: %s", user_window->GetName().c_str()); 
 #endif
             //std::printf("in <EventDisplayKernel::%s>: attempting to evaluate DrawFunction '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
 
-            user_window.DrawObjects(); 
+            user_window->DrawObjects(); 
 
         } catch (const std::exception& e) {
 
@@ -502,7 +508,7 @@ void EventDisplayKernel::DrawCurrentEvent()
                 "Exception caught drawing window '%s'.\n"
                 "   Current window / object: %s / %s"
                 "\n what(): %s", 
-                user_window.GetName().c_str(), fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str(), e.what()); 
+                user_window->GetName().c_str(), fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str(), e.what()); 
             std::exit(1); 
             return; 
         }
@@ -510,6 +516,37 @@ void EventDisplayKernel::DrawCurrentEvent()
 
 }
 //________________________________________________________________________________________________
+void EventDisplayKernel::AddUserWindow(std::unique_ptr<UserWindow> ptr)
+{
+#ifdef DEBUG
+    Info(__func__, "in body. adding ptr %p", ptr.get()); 
+#endif
+
+    //search the list of user windows to see if this one has already been added
+    if (!ptr) {
+        Warning(__func__, "Null user-defined window passed."); 
+        return; 
+    }
+
+    auto name = ptr->GetName();
+#ifdef DEBUG
+    Info(__func__, "ptr for new window is not null. name: %s", name.c_str()); 
+#endif
+    auto find_it = std::find_if(fUserWindows.begin(), fUserWindows.end(), [name](const std::unique_ptr<UserWindow>& rhs){ return (rhs && name == rhs->GetName()); });
+#ifdef DEBUG
+    Info(__func__, "Added this window before? %s", (find_it == fUserWindows.end() ? "no" : "yes")); 
+#endif
+    //if no other user-defined window was a match, then add this one.  
+    if (find_it == fUserWindows.end()) {
+        fUserWindows.push_back( std::move(ptr) );     
+#ifdef DEBUG
+        Info(__func__, "added new window to list"); 
+#endif
+        return; 
+    }
+
+    Warning(__func__, "User-defined window '%s' has already been added to the list of windows; not adding duplicate.\n", name.c_str()); 
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
