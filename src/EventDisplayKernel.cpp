@@ -484,7 +484,9 @@ void EventDisplayKernel::DrawCurrentEvent()
     for (auto& user_window : fUserWindows) {
 
         //if the winow is inactive, skip it. 
-        if (!user_window || !user_window->IsActive()) continue; 
+        if (fAppState == AppState::kActive) {
+            if (!user_window->IsActive()) continue; 
+        }
 
         try {
 #ifdef DEBUG

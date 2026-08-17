@@ -1,5 +1,5 @@
 
-#include "draw_basic_window.h"
+//#include "draw_basic_window.h"
 
 #include <EventDisplayKernel.hpp>
 #include <UserWindow.hpp>
@@ -39,18 +39,13 @@ void test_modular_windows()
     // get access to the kernel
     auto& kernel = EventDisplayKernel::Instance(); 
 
-    //first, create our first user-defined window
-    auto window = std::make_unique<UserWindow>("hcal", draw_basic_window(600,800)); 
+    // add our first user window (hcal)
+    kernel.AddUserWindow("hcal", 300, 800);
 
-    //now, let's add some stuff to draw 
-    // draw the hcal frame
-    window->AddDrawnItem("hcal frame", draw_hcal_frame);
+    // add our first drawn item
+    kernel.AddDrawFunction("hcal", "frame", draw_hcal_frame, Frequency::Type::kEachEvent);
 
-    // draw the 'goodblock' energies 
-    window->AddDrawnItem("goodblock energy", draw_goodblock_energy); 
-
-    //add our user-defined window
-    kernel.AddUserWindow( std::move(window) ); 
+    kernel.AddDrawFunction("hcal", "goodblock_e", draw_goodblock_energy, Frequency::Type::kEachTimeStep);
 
     // tell the kernel about the ROOT file we want to look at
     kernel.SetFile("e1209016_fullreplay_3013_stream0_2_seg1_1.root"); 

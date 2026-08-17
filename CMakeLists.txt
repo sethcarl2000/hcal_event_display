@@ -15,6 +15,7 @@ set(headers
     include/DrawFunction.hpp
     include/UserApp.hpp
     include/UserWindow.hpp
+    include/EventGUI.hpp
 #    include/PrivateMessenger.hpp
 )
 
@@ -22,6 +23,7 @@ set(sources
     src/EventDisplayKernel.cpp
     src/UserApp.cpp
     src/UserWindow.cpp
+    src/EventGUI.cpp
 #    src/PrivateMessenger.cpp
 )
 

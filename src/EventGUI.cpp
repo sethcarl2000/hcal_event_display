@@ -35,18 +35,18 @@ void EventGUI::CloseWindow()
 {
     Cleanup(); 
     //tell the kernel that the user called for us to close the app
-    EventDisplayKernel::Instance().CloseApp(Key<EventGUI>{});
+    EventDisplayKernel::Instance().CloseApp(fMyKey);
     gApplication->Terminate(0); 
 }
 //________________________________________________________________________________________________
 void EventGUI::DoNextEvent()
 {
-    EventDisplayKernel::Instance().DoNextEvent(Key<EventGUI>{});
+    EventDisplayKernel::Instance().DoNextEvent(fMyKey);
 }
 //________________________________________________________________________________________________
 void EventGUI::DoPrevEvent()
 {
-    EventDisplayKernel::Instance().DoPrevEvent(Key<EventGUI>{});
+    EventDisplayKernel::Instance().DoPrevEvent(fMyKey);
 }
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

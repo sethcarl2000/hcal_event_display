@@ -11,6 +11,9 @@ class EventDisplayKernel;
 
 class EventGUI : public TGMainFrame {
 
+    /// this is the class' 'Key' which lets the kernel call some methods of other classes that no other class can call.  
+    Key<EventGUI> fMyKey{}; 
+
     //
     TGHorizontalFrame *fFrame_buttons; 
     TGTextButton *fGButton_next, *fGButton_prev; 
