@@ -41,3 +41,5 @@ option(DEBUG "Enable GUI debug printing" ON)
 if (DEBUG)
     target_compile_definitions(EventDisplay PRIVATE DEBUG)
 endif()
+
+root_generate_dictionary(G__EventDisplay ${headers} LINKDEF include/LinkDef.h MODULE EventDisplay)

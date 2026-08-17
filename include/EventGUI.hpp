@@ -41,6 +41,7 @@ public:
 
     void CloseWindow() override; 
 
+    ClassDef(EventGUI,1);
 };
 
 

@@ -26,7 +26,17 @@ UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_
 
     const auto window_name = parent->GetName().c_str(); 
 
+    //auto hframe = new TGHorizontalFrame(this, w, h);
+    //
+
     fECanvas = new TRootEmbeddedCanvas(parent->GetName().c_str(), this, w, h);
+
+    //draw an empty frame to make sure the canvas shows up 
+    fECanvas->GetCanvas()->cd()->DrawFrame(0,0,1,1);
+
+    AddFrame(fECanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 2,2,2,2)); 
+    
+    //hframe->AddFrame(fECanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 5,5,5,5)); 
     
     //check to make sure the user defined an embedded canvas! 
     if (fECanvas == nullptr) {
@@ -34,6 +44,8 @@ UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_
         std::exit(1);
         return; 
     }
+
+    //AddFrame()
 
     //set the name of this app 
     SetWindowName(window_name);

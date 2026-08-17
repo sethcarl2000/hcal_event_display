@@ -36,7 +36,6 @@ void EventGUI::CloseWindow()
     Cleanup(); 
     //tell the kernel that the user called for us to close the app
     EventDisplayKernel::Instance().CloseApp(fMyKey);
-    gApplication->Terminate(0); 
 }
 //________________________________________________________________________________________________
 void EventGUI::DoNextEvent()
