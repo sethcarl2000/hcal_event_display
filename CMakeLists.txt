@@ -10,18 +10,19 @@ find_package(ROOT 6.20 REQUIRED COMPONENTS Core RIO Physics)
 
 set(headers
     include/EventDisplayKernel.hpp
+    include/Key.hpp
+    include/Frequency_Type.hpp
     include/DrawFunction.hpp
-    include/AppDrawFunction.hpp 
     include/UserApp.hpp
     include/UserWindow.hpp
-    include/PrivateMessenger.hpp
+#    include/PrivateMessenger.hpp
 )
 
 set(sources
     src/EventDisplayKernel.cpp
     src/UserApp.cpp
     src/UserWindow.cpp
-    src/PrivateMessenger.cpp
+#    src/PrivateMessenger.cpp
 )
 
 add_library(EventDisplay SHARED ${sources} ${headers})

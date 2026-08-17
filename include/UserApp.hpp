@@ -1,8 +1,8 @@
 #ifndef UserApp_hpp
 #define UserApp_hpp
 
-#include <AppDrawFunction.hpp>
 #include <DrawFunction.hpp>
+#include <Key.hpp>
 //TGUI headers
 #include <TGFrame.h>
 #include <TRootEmbeddedCanvas.h> 
@@ -17,17 +17,23 @@ class UserWindow;
 class UserApp : public TGMainFrame {
 private: 
 
+    /// this is the class' 'Key' which lets the kernel call some methods of other classes that no other class can call.  
+    Key<UserApp> fMyKey{}; 
+
     //parent class 
     UserWindow* fParent; 
 
     TRootEmbeddedCanvas *fECanvas; 
 
 public: 
+
+    // Default constructor. We add a 'kernel key' as an argument,
+    // because it's an object that only the kernel can create. 
     UserApp(
+        Key<UserWindow>,
         UserWindow* parent, 
         const TGWindow* ptr, 
-        UInt_t w, UInt_t h, 
-        const AppDrawFunction& app_draw_fcn
+        UInt_t w, UInt_t h
     );
 
     ~UserApp();     

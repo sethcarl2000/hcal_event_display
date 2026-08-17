@@ -1,8 +1,10 @@
 #ifndef EventDisplayKernel_hpp
 #define EventDisplayKernel_hpp
 
+#include <Key.hpp>
 #include <DrawFunction.hpp>
 #include <UserWindow.hpp>
+#include <Frequency_Type.hpp>
 // TGUI headers
 #include <TGFrame.h>
 #include <TGWindow.h>
@@ -35,17 +37,29 @@ enum class dtype {
     uint
 }; 
 
+//put here a list of classes that we're going to allow to propagate signals to the EventDisplayKernel (not the user!)
+class EventGUI; 
+class SignalKey {
+private: 
+    friend class EventGUI; 
+    friend class UserWindow; 
+    SignalKey() = default; 
+};
+
 //implementing this class as a meyer's singleton 
-class EventDisplayKernel : public TGMainFrame {
+class EventDisplayKernel : public TObject {
 public: 
     enum class AppState { kNone=0, kInit, kActive };
 private: 
+
+    /// this is the kernel's 'Key' which lets the kernel call some methods of other classes that no other class can call.  
+    Key<EventDisplayKernel> fMyKey{}; 
 
     //constructor 
     EventDisplayKernel(); 
 
     //destructor 
-    ~EventDisplayKernel(); 
+    ~EventDisplayKernel() = default; 
 
     std::unique_ptr<ROOT::RDataFrame> fDataFrame{nullptr}; 
 
@@ -81,7 +95,8 @@ private:
 
     //the 'event index', which starts from '0' and goes in order until 'n_events-1'.  
     size_t fEventIndex; 
-    UInt_t fEventNumber; 
+    UInt_t fEventNumber;
+    double fTimestamp{0.};  
 
     ROOT::VecOps::RVec<UInt_t> fEventNumbers; 
 
@@ -89,7 +104,7 @@ private:
     inline size_t GetEventIndex() const { return fEventIndex; } 
 
     //Launches GUI 
-    void LaunchGUI(UInt_t w, UInt_t h);
+    void LaunchGUI();
 
     // 
     void DrawEventIndex(size_t event_index); 
@@ -99,6 +114,8 @@ private:
     /// @return event index in indexed list of events 
     size_t FindEventIndex(UInt_t event_number); 
 
+    /// @brief The GUI (user's graphical input interface)
+    EventGUI* fGUI; 
 
     // GUI items
     //TGHorizontalFrame *fFrame_canv;      
@@ -107,19 +124,11 @@ private:
     //currently active window
     UserWindow* fCurrentUserWindow{nullptr}; 
 
-    std::string fCurrentObjDrawFunctionName{"none"}, fCurrentAppDrawFunctionName{"none"}; 
-
-    TGHorizontalFrame *fFrame_buttons; 
-    TGTextButton *fGButton_next, *fGButton_prev; 
-    TGLabel *fGLabel_eventNumber; 
-
     //dimensions of canvas to draw. 
     double fX0{-24.*15./2.}, fY0{-12.*15./2.}, fX1{+24.*15./2.}, fY1{+12.*15./2.}; 
 
     //this variable stores the name of the current user-defined draw funciton. 
     std::string fCurrentDrawFunction{"none"}; 
-
-    friend class PrivateMessenger; 
 
 public: 
 
@@ -131,16 +140,28 @@ public:
     static EventDisplayKernel& Instance(); 
 
     /// @return current app state (none, init, active)
-    inline AppState GetAppState() const { return fAppState; }
+    AppState GetAppState() const { return fAppState; }
+
+    /// @return get the current timestamp 
+    double GetTimestamp() const { return fTimestamp; }
 
     // set the input file
-    inline void SetFile(std::string path_file) { fFilePath=path_file; }; 
+    void SetFile(std::string path_file) { fFilePath=path_file; }; 
 
     // set the tree name
-    inline void SetTreeName(std::string tree_name) { fTreeName=tree_name; }; 
+    void SetTreeName(std::string tree_name) { fTreeName=tree_name; }; 
 
-    // add a new user-defined window
-    void AddUserWindow(std::unique_ptr<UserWindow> window);
+    /// @brief Add a new user window
+    /// @param name The name of the window. This must be unique; if another window with the same name has already been added, the program will exit. 
+    /// @param width width of the window, in pixels.
+    /// @param height height of the window, in pixels.
+    void AddUserWindow(std::string window_name, UInt_t width, UInt_t height);
+    
+    /// @brief Add a a new object drawing function. 
+    /// @param window_name name of the window to add it to. the winodow with this name must be added first! 
+    /// @param object_name unique name of this drawing routine. If the window 'window_name' already has an object with the same name, the program will exit. 
+    /// @param draw_frequency How often to re-run this drawing routine. Frequency::kEachEvent = call this once for every new event. Frequency::kEachTimeStep = call this each time a new event and/or time is set.
+    void AddDrawFunction(std::string window_name, std::string object_name, const std::function<void(void)>& fcn, Frequency::Type);
 
     //Launch interactive app 
     void LaunchApp();
@@ -161,12 +182,19 @@ public:
     //the 'event number', as it appears in the rootfile
     inline UInt_t GetEventNumber() const { return fEventNumber; } 
 
+
+    // These are methods that the user _cannot_ invoke, so we require that classes with explicit permission pass us a 'signal key' object
+    // (which only those classes can construct).
+    //
     //methods that connect to GUI buttons
-    void DoNextEvent(); 
-    void DoPrevEvent(); 
+    void DoNextEvent(Key<EventGUI>); 
+    void DoPrevEvent(Key<EventGUI>);  
+    void CloseApp(Key<EventGUI>);
 
-    void CloseWindow(); 
+    void DoDrawTimestamp(Key<EventGUI>, double timestamp);
 
+    void SetCanvas(Key<UserWindow>, TCanvas* canv) { fCurrentCanvas=canv; }
+    void SetUserWindow(Key<UserWindow>, UserWindow* window) { fCurrentUserWindow=window; }
 }; 
 
 

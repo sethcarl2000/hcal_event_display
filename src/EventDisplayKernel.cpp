@@ -1,4 +1,6 @@
+
 #include <EventDisplayKernel.hpp>
+#include <EventGUI.hpp> 
 // ROOT headers
 #include <TError.h> 
 #include <TObjArray.h>
@@ -72,6 +74,16 @@ void EventDisplayKernel::LaunchApp()
         std::exit(1);
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  This is the 'init' phase of the app. We have several things on our to-do list. 
+    // 
+    //    1. We need to loop over all User apps, and do a 'dry-run' of all their draw functions. 
+    //       this will let us know what branches we need to make copies of from the tree. 
+    //
+    //    2. Next, we're going to (try) to open the user-proivded TTree, and make copies of all the data
+    //       the user requested. 
+    //  
     fAppState = AppState::kInit; 
 
     DrawCurrentEvent(); 
@@ -80,6 +92,7 @@ void EventDisplayKernel::LaunchApp()
     
     size_t n_events; 
 
+    // let's try and get all the branches the user wants. 
     try {
         auto event_number_rptr = GetDataFrame()->Take<UInt_t>("fEvtHdr.fEvtNum"); 
 
@@ -97,13 +110,48 @@ void EventDisplayKernel::LaunchApp()
 
     fAppState = AppState::kActive; 
 
-    //activate all windows
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //  Now, we should be ready to actually launch the GUI app. 
+    //
+    LaunchGUI(); 
+
+    //activate all windows, by default. 
+    for (auto& user_window : fUserWindows) user_window->DoActivate(fMyKey); 
+
     fEventIndex=0; 
     for (auto& user_window : fUserWindows) {
-        user_window->DrawWindow(); 
-    }
+#ifdef DEBUG
+        const char* const window_name = user_window->GetName().c_str(); 
+#endif
+        try {
 
-    LaunchGUI(1400, 700); 
+#ifdef DEBUG 
+            Info(__func__, "<window: %s> activating user window\n", window_name); 
+#endif
+            user_window->DoActivate(fMyKey);      
+#ifdef DEBUG 
+            Info(__func__, "<window: %s> drawing event draw functions...\n", window_name); 
+#endif
+            user_window->DoDrawEvent(fMyKey);
+#ifdef DEBUG 
+            Info(__func__, "<window: %s> drawing timestamp draw functions...\n", window_name); 
+#endif
+            user_window->DoDrawTimestamp(fMyKey);
+
+        } catch (const std::exception& e) {
+            
+            Error(__func__, "Something went wrong trying draw window / object: %s / %s.\n what(): %s", 
+                user_window->GetName().c_str(),
+                user_window->GetCurrentDrawFunctionName().c_str(), 
+                e.what()
+            );
+            std::exit(1);
+        }
+#ifdef DEBUG 
+        Info(__func__, "<window: %s> done.\n", window_name); 
+#endif
+    }
     // do stuff that actually launches the GUI app...   
     // 
     // 
@@ -160,7 +208,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                 Error(  "GetData(run phase)", "Requested branch '%s' appears in tree, but not in app's list of branches.\n"
                         "   Current window / object: %s / %s",
                     branch_name.c_str(),
-                    fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+                    fCurrentUserWindow->GetName().c_str(), fCurrentUserWindow->GetCurrentDrawFunctionName().c_str()
                 ); 
                 std::exit(1); 
                 return T{};
@@ -183,7 +231,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                 Error("GetData(init phase)", "Branch '%s' does not exist in tree '%s'\n"
                 "   Current window / object: %s / %s\n", 
                 branch_name.c_str(), fTreeName.c_str(),
-                fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+                fCurrentUserWindow->GetName().c_str(), fCurrentUserWindow->GetCurrentDrawFunctionName().c_str()
             ); 
                 std::exit(1);  
                 return T{};
@@ -215,7 +263,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                     branch_name.c_str(), 
                     branch_type.c_str(), 
                     (requested_class_name != nullptr ? requested_class_name : "null"),
-                    fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+                    fCurrentUserWindow->GetName().c_str(), fCurrentUserWindow->GetCurrentDrawFunctionName().c_str()
                 );
                 std::exit(1); 
                 return T{};
@@ -254,13 +302,7 @@ bool EventDisplayKernel::DoesBranchExist(std::string branch_name) const
     return false; 
 }
 //________________________________________________________________________________________________
-//explicity instantiate valid templates
-template double EventDisplayKernel::GetData<double>(std::string branch_name);
-//
-template ROOT::VecOps::RVec<double> EventDisplayKernel::GetData<ROOT::VecOps::RVec<double>>(std::string branch_name);
-//
-template unsigned int EventDisplayKernel::GetData<unsigned int>(std::string branch_name);
-//
+
 //________________________________________________________________________________________________
 bool EventDisplayKernel::BranchTypeMatches(std::string branch_name, const std::type_info& type)
 {
@@ -305,7 +347,7 @@ void EventDisplayKernel::Draw(TObject* object, const char* option)
         Warning(__func__, 
             "Cannot draw object, current user window is null.\n"
             "   Current window / object: %s / %s\n", 
-            fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+            fCurrentUserWindow->GetName().c_str(), fCurrentUserWindow->GetCurrentDrawFunctionName().c_str()
         ); 
         return; 
     }
@@ -314,7 +356,7 @@ void EventDisplayKernel::Draw(TObject* object, const char* option)
         Warning(__func__, 
             "Object called to be drawn is nullptr, and thus cannot be drawn. was it properly initailzied?\n"
             "   Current window / object: %s / %s",
-            fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+            fCurrentUserWindow->GetName().c_str(), fCurrentUserWindow->GetCurrentDrawFunctionName().c_str()
         ); 
         return; 
     }
@@ -333,7 +375,7 @@ void EventDisplayKernel::Draw(TObject* object, const char* option)
             Error(__func__, 
                 "Dynamic cast of TObject* to TH1* failed, even though this object inherits from TH1 (and thus this should have succeeded).\n"
                 "   Current window / object: %s / %s",
-                fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str()
+                fCurrentUserWindow->GetName().c_str(), fCurrentUserWindow->GetCurrentDrawFunctionName().c_str()
             ); 
             std::exit(1);
         }
@@ -342,8 +384,7 @@ void EventDisplayKernel::Draw(TObject* object, const char* option)
 
     if (fAppState == AppState::kActive) {
         
-        fCurrentUserWindow->cd(); 
-        fCurrentUserWindow->AddPrimitive(object); 
+        fCurrentUserWindow->AddPrimitive(fMyKey, object); 
 
         auto canv = GetCanvas(); 
         canv->cd(); 
@@ -369,66 +410,23 @@ size_t EventDisplayKernel::FindEventIndex(UInt_t event_number)
     return (*find_it); 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::LaunchGUI(UInt_t w, UInt_t h)
+void EventDisplayKernel::LaunchGUI()
 {
-    TGMainFrame(
-        gClient->GetRoot(), 
-        w, h
-    ); 
-
-    SetCleanup(kDeepCleanup); 
-
-    /*fFrame_canv = new TGHorizontalFrame(this, w, h); 
-
-    fECanvas = new TRootEmbeddedCanvas("ECanvas_data", fFrame_canv, w, h); 
-
-    TCanvas* canvas = GetCanvas(); 
-
-    //draw an empty frame
-    canvas->DrawFrame(fX0,fY0, fX1,fY1);
-    
-    fFrame_canv->AddFrame(fECanvas, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX | kLHintsCenterX, 0,0,0,5)); 
-
-    AddFrame(fFrame_canv, new TGLayoutHints(kLHintsTop | kLHintsExpandX | kLHintsExpandY, 0, 0, 0, 0)); 
-    */ 
-
-    //now, we can start adding buttons
-    fFrame_buttons = new TGHorizontalFrame(this, w, 50);
-
-    //Next event button
-    fGButton_next      = new TGTextButton(fFrame_buttons, "&Next event", 1); 
-    fGButton_next->Connect("Clicked()", "EventDisplayKernel", this, "DoNextEvent()"); 
-    fFrame_buttons->AddFrame(fGButton_next, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 20, 10, 5, 5)); 
-
-    //Prev. event button
-    fGButton_prev      = new TGTextButton(fFrame_buttons, "&Prev. event", 1); 
-    fGButton_prev->Connect("Clicked()", "EventDisplayKernel", this, "DoPrevEvent()"); 
-    fFrame_buttons->AddFrame(fGButton_prev, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 20, 10, 5, 5)); 
-
-    AddFrame(fFrame_buttons, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 0, 0, 5, 10));
-
-    //draw the first event
-    DrawEventIndex(0); 
-
-    SetWindowName("Event display");
-    MapSubwindows();
-    Resize(GetDefaultSize());
-    MapWindow();
+    if (fGUI) {
+        Error(__func__, "Function invoked even though GUI object is already allocated.");
+        std::exit(1);
+        return; 
+    }
+    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400);
 }
-//________________________________________________________________________________________________
-EventDisplayKernel::~EventDisplayKernel()
-{
-    Cleanup(); 
-}
-//________________________________________________________________________________________________
-void EventDisplayKernel::CloseWindow()
-{
-    gApplication->Terminate(0); 
-}
+
 //________________________________________________________________________________________________
 TCanvas* EventDisplayKernel::GetCanvas()
 {
-    if (fAppState != AppState::kActive) return nullptr; 
+    if (fAppState != AppState::kActive) {
+        Error(__func__, "GetCanvas() invoked in inactive state. (No canvas exists!)");
+        return nullptr;
+    }
 
     if (fCurrentCanvas) return fCurrentCanvas; 
 
@@ -436,7 +434,7 @@ TCanvas* EventDisplayKernel::GetCanvas()
     std::exit(1); 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::DoNextEvent()
+void EventDisplayKernel::DoNextEvent(Key<EventGUI>)
 {
     if (fEventIndex < fEventNumbers.size()-1) {
         ++fEventIndex; 
@@ -447,7 +445,7 @@ void EventDisplayKernel::DoNextEvent()
     DrawCurrentEvent(); 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::DoPrevEvent()
+void EventDisplayKernel::DoPrevEvent(Key<EventGUI>)
 {
     if (fEventIndex > 0) {
         --fEventIndex; 
@@ -489,26 +487,28 @@ void EventDisplayKernel::DrawCurrentEvent()
         if (!user_window || !user_window->IsActive()) continue; 
 
         try {
-
+#ifdef DEBUG
+            Info(__func__, "Trying to draw UserWindow: %s", user_window->GetName().c_str()); 
+#endif
             //tell this user window that its canvas is the active one. 
             // this is important, because users may ask the kernel for access to the current canvas, and this method
             // makes sure that they are given the correct one corresponding to this window. 
-            user_window->cd(); 
+            user_window->DoDrawEvent(fMyKey);
 
 #ifdef DEBUG
             Info(__func__, "Trying to draw UserWindow: %s", user_window->GetName().c_str()); 
 #endif
             //std::printf("in <EventDisplayKernel::%s>: attempting to evaluate DrawFunction '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
 
-            user_window->DrawObjects(); 
+            user_window->DoDrawTimestamp(fMyKey); 
 
         } catch (const std::exception& e) {
 
             Error(__func__, 
-                "Exception caught drawing window '%s'.\n"
+                "Exception caught drawing window.\n"
                 "   Current window / object: %s / %s"
                 "\n what(): %s", 
-                user_window->GetName().c_str(), fCurrentAppDrawFunctionName.c_str(), fCurrentObjDrawFunctionName.c_str(), e.what()); 
+                fCurrentUserWindow->GetName().c_str(), fCurrentUserWindow->GetCurrentDrawFunctionName().c_str(), e.what()); 
             std::exit(1); 
             return; 
         }
@@ -516,36 +516,93 @@ void EventDisplayKernel::DrawCurrentEvent()
 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::AddUserWindow(std::unique_ptr<UserWindow> ptr)
+void EventDisplayKernel::DoDrawTimestamp(Key<EventGUI>, double timestamp)
+{
+    fTimestamp = timestamp; 
+
+    //run each (active) event-drawing function (in order!)
+    /*for (const auto& draw_function : fDrawFunctions) {
+        if(draw_function.is_active) { draw_function.fcn(); } 
+    }*/ 
+    //loop over all drawn functions, to register each of the requested branches
+    for (auto& user_window : fUserWindows) {
+
+        //if the winow is inactive, skip it. 
+        if (!user_window || !user_window->IsActive()) continue; 
+
+        try {
+#ifdef DEBUG
+            Info(__func__, "Trying to draw UserWindow: %s", user_window->GetName().c_str()); 
+#endif
+            //tell this user window that its canvas is the active one. 
+            // this is important, because users may ask the kernel for access to the current canvas, and this method
+            // makes sure that they are given the correct one corresponding to this window. 
+            user_window->DoDrawTimestamp(fMyKey);
+
+#ifdef DEBUG
+            Info(__func__, "Trying to draw UserWindow: %s", user_window->GetName().c_str()); 
+#endif
+        } catch (const std::exception& e) {
+
+            Error(__func__, 
+                "Exception caught drawing window.\n"
+                "   Current window / object: %s / %s"
+                "\n what(): %s", 
+                fCurrentUserWindow->GetName().c_str(), fCurrentUserWindow->GetCurrentDrawFunctionName().c_str(), e.what()); 
+            std::exit(1); 
+            return; 
+        }
+    }
+
+}
+//________________________________________________________________________________________________
+void EventDisplayKernel::AddDrawFunction(std::string window_name, std::string object_name, const std::function<void(void)>& fcn,  Frequency::Type type)
+{
+    //search through the list of window names, to find the one the user wants to add this function to. 
+    UserWindow* my_window=nullptr; 
+    for (auto& window : fUserWindows) {
+        if (window->GetName() == window_name) { my_window = window.get(); break; }
+    }
+
+    if (my_window == nullptr) {
+        Error(__func__,
+            "Cannot add drawn item '%s' to window '%s'; a window with this name could not be found in the list of added windows. Make sure:\n"
+            "   1. the name is spelled exactly as it was when the window was added, and\n"
+            "   2. this draw function is added *after* the window is.",
+            object_name.c_str(), window_name.c_str()
+        );  
+        std::exit(1);
+    }   
+
+    DrawFunction draw_function{ .name=object_name, .fcn=fcn, .is_active=true };
+
+    //now, we have our window. we can add the function. 
+    my_window->AddDrawnItem(fMyKey, draw_function, type);
+}
+//________________________________________________________________________________________________
+void EventDisplayKernel::AddUserWindow(std::string window_name, UInt_t width, UInt_t height)
 {
 #ifdef DEBUG
-    Info(__func__, "in body. adding ptr %p", ptr.get()); 
+    Info(__func__, "in body. adding new window '%s'", window_name.c_str()); 
 #endif
 
-    //search the list of user windows to see if this one has already been added
-    if (!ptr) {
-        Warning(__func__, "Null user-defined window passed."); 
-        return; 
+    //first, let's search the list of user-defined windows, to make sure this isn't a duplicate (not allowed -- fatal error!)
+    for (const auto& window : fUserWindows) {
+        if (window->GetName() == window_name) {
+            Error(__func__, "Tried to add new user window with name '%s', but a window with this same name has already been added to the list!", window_name.c_str());
+            std::exit(1);
+            return; 
+        }
     }
 
-    auto name = ptr->GetName();
-#ifdef DEBUG
-    Info(__func__, "ptr for new window is not null. name: %s", name.c_str()); 
-#endif
-    auto find_it = std::find_if(fUserWindows.begin(), fUserWindows.end(), [name](const std::unique_ptr<UserWindow>& rhs){ return (rhs && name == rhs->GetName()); });
-#ifdef DEBUG
-    Info(__func__, "Added this window before? %s", (find_it == fUserWindows.end() ? "no" : "yes")); 
-#endif
-    //if no other user-defined window was a match, then add this one.  
-    if (find_it == fUserWindows.end()) {
-        fUserWindows.push_back( std::move(ptr) );     
-#ifdef DEBUG
-        Info(__func__, "added new window to list"); 
-#endif
-        return; 
-    }
+    //now, we construct a new user-window. 
+    fUserWindows.emplace_back(
+        std::make_unique<UserWindow>(fMyKey, window_name, width, height)
+    ); 
 
-    Warning(__func__, "User-defined window '%s' has already been added to the list of windows; not adding duplicate.\n", name.c_str()); 
+#ifdef DEBUG
+    Info(__func__, "added new window to list"); 
+#endif
 }
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
@@ -560,5 +617,12 @@ void EventDisplayKernel::AddUserWindow(std::unique_ptr<UserWindow> ptr)
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
+//explicity instantiate valid templates
+template double EventDisplayKernel::GetData<double>(std::string branch_name);
+//
+template ROOT::VecOps::RVec<double> EventDisplayKernel::GetData<ROOT::VecOps::RVec<double>>(std::string branch_name);
+//
+template unsigned int EventDisplayKernel::GetData<unsigned int>(std::string branch_name);
+//
 
 template<> std::string inst_helpers::GetBranchCode<double>() { return "F"; }
