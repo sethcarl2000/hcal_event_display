@@ -637,19 +637,27 @@ void EventDisplayKernel::CloseApp(Key<EventGUI>) { gApplication->Terminate(0); }
 //________________________________________________________________________________________________
 void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, bool activate_window)
 {
+#ifdef DEBUG
+    Info(__func__, "searching for window '%s'...", window_name.c_str());
+#endif
     //search the list of windows, to make sure it exsits. 
-    UserWindow* my_window=nullptr; 
-    for (auto& window : fUserWindows) {
-        if (window->GetName() == window_name) { my_window = window.get(); break; }
-    }
+    auto find_it = std::find_if(
+        fUserWindows.begin(),
+        fUserWindows.end(),
+        [&window_name](const auto& window){ return window->GetName() == window_name; }
+    ); 
 
-    if (my_window == nullptr) {
+    if (find_it == fUserWindows.end()) {
         Error(__func__,
             "Cannot toggle window '%s'; a window with this name could not be found in the list of added windows.",
             window_name.c_str()
         );  
         std::exit(1);
     }   
+#ifdef DEBUG
+    Info(__func__, "window found.");
+#endif
+    auto& my_window = *find_it; 
 
     // if the window is inactive AND the GUI signaled to activate it... 
     if (activate_window==true &&  my_window->IsActive()==false) {
