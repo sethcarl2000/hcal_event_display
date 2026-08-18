@@ -48,7 +48,7 @@ private:
 };
 
 //implementing this class as a meyer's singleton 
-class EventDisplayKernel : public TObject {
+class EventDisplayKernel {
 public: 
     enum class AppState { kNone=0, kInit, kActive };
 private: 

@@ -40,6 +40,32 @@ EventDisplayKernel& EventDisplayKernel::Instance() {
     return instance; 
 }
 //________________________________________________________________________________________________
+template<typename T> void EventDisplayKernel::SetEventIndex(Key<T>, size_t index)
+{
+    //if (index == fEventIndex) return; //noop 
+    if (index >= fEventNumbers.size()) {
+        Error(__func__, "illegal event index: %zi (valid range is 0-%zi).", index, fEventNumbers.size()-1);
+        std::exit(1);
+        return; 
+    }
+
+    //accept this new event index
+    fEventIndex = index; 
+    
+    // update the event number to match 
+    fEventNumber = fEventNumbers[index];
+
+    //tell the GUI there's a new event index 
+    if (fGUI) fGUI->NewEventIndex(fMyKey, GetEventIndex());
+    
+    DrawCurrentEvent(); 
+}
+//________________________________________________________________________________________________
+// For the above method, the template arguments listed here represent the only two class types 
+// which are allowed to call this method. 
+template void EventDisplayKernel::SetEventIndex(Key<EventDisplayKernel>, size_t index); // <- we (EventDisplayKernel) are allowed to call this function
+template void EventDisplayKernel::SetEventIndex(Key<EventGUI>,           size_t index); // <- EventGUI is allowed to call this method. 
+//________________________________________________________________________________________________
 EventDisplayKernel::EventDisplayKernel()
 {
 #ifdef DEBUG
@@ -463,31 +489,6 @@ void EventDisplayKernel::DoPrevEvent(Key<EventGUI>)
     }
 }
 //________________________________________________________________________________________________
-template<typename T> void EventDisplayKernel::SetEventIndex(Key<T>, size_t index)
-{
-    //if (index == fEventIndex) return; //noop 
-    if (index >= fEventNumbers.size()) {
-        Error(__func__, "illegal event index: %zi (valid range is 0-%zi).", index, fEventNumbers.size()-1);
-        std::exit(1);
-        return; 
-    }
-
-    //accept this new event index
-    fEventIndex = index; 
-    
-    // update the event number to match 
-    fEventNumber = fEventNumbers[index];
-
-    //tell the GUI there's a new event index 
-    if (fGUI) fGUI->NewEventIndex(fMyKey, GetEventIndex());
-    
-    DrawCurrentEvent(); 
-}
-//________________________________________________________________________________________________
-// For the above method, the template arguments listed here represent the only two class types 
-// which are allowed to call this method. 
-//template<> void EventDisplayKernel::SetEventIndex(Key<EventDisplayKernel>, size_t index); // <- we (EventDisplayKernel) are allowed to call this function
-template<> void EventDisplayKernel::SetEventIndex(Key<EventGUI>,           size_t index); // <- EventGUI is allowed to call this method. 
 //________________________________________________________________________________________________
 void EventDisplayKernel::DrawCurrentEvent()
 {
@@ -723,5 +724,3 @@ template ROOT::VecOps::RVec<double> EventDisplayKernel::GetData<ROOT::VecOps::RV
 //
 template unsigned int EventDisplayKernel::GetData<unsigned int>(std::string branch_name);
 //
-
-template<> std::string inst_helpers::GetBranchCode<double>() { return "F"; }
