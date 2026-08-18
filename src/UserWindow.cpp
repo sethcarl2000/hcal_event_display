@@ -126,7 +126,7 @@ void UserWindow::DoActivate(Key<EventDisplayKernel>)
 //__________________________________________________________________________________________________________________________
 void UserWindow::DoDeactivate()
 {
-    if (IsActive()) { fApp->CloseWindow(); }
+    if (fApp) { fApp->CloseWindow(); }
 }
 //__________________________________________________________________________________________________________________________
 void UserWindow::cd()

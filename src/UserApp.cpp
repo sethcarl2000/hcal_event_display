@@ -65,9 +65,9 @@ UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_
 //__________________________________________________________________________________________________________________________
 void UserApp::CloseWindow()
 {
+    Cleanup(); 
     //notify the parent that this app has been closed
-    fParent->DoDeactivate(); 
-
+    //fParent->DoDeactivate(); 
     //delete this app 
     DeleteWindow(); 
 }
