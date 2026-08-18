@@ -40,13 +40,21 @@ void test_modular_windows()
     auto& kernel = EventDisplayKernel::Instance(); 
 
     // add our first user window (hcal)
-    kernel.AddUserWindow("hcal", 300, 800);
+    kernel.AddUserWindow("hcal", 500, 800);
 
     // add our first drawn item
     kernel.AddDrawFunction("hcal", "frame", draw_hcal_frame, Frequency::Type::kEachEvent);
 
     kernel.AddDrawFunction("hcal", "goodblock_e", draw_goodblock_energy, Frequency::Type::kEachTimeStep);
 
+
+    // add our first user window (hcal)
+    kernel.AddUserWindow("hcal2", 500, 800);
+
+    // add our first drawn item
+    kernel.AddDrawFunction("hcal2", "frame", draw_hcal_frame, Frequency::Type::kEachEvent);
+
+    kernel.AddDrawFunction("hcal2", "goodblock_e", draw_goodblock_energy, Frequency::Type::kEachTimeStep);
     // tell the kernel about the ROOT file we want to look at
     kernel.SetFile("e1209016_fullreplay_3013_stream0_2_seg1_1.root"); 
     kernel.SetTreeName("T"); 
