@@ -61,7 +61,7 @@ void test_modular_windows()
 //___________________________________________________________________________________________________________
 void draw_hcal_frame()
 {
-    auto th2d = new TH2D("h_2d", "H.Cal 'goodblocks';column;row;block energy (MeV)", 24,-0.5,24-0.5, 12,-0.5,12-0.5);
+    auto th2d = new TH2D("h_2d", "H.Cal 'goodblocks';column;row;block energy (MeV)", 12,-0.5,12-0.5, 24,-0.5,24-0.5);
     th2d->GetZaxis()->SetRangeUser(0, 200); 
     
     auto& kernel = EventDisplayKernel::Instance(); 
@@ -101,8 +101,8 @@ void draw_goodblock_energy()
         double energy = blocks_e[i]; 
 
         auto block = new TBox(
-            row-0.5,col-0.5,    //x1,y1
-            row+0.5,col+0.5     //x2,y2
+            col-0.5,row-0.5,    //x1,y1
+            col+0.5,row+0.5     //x2,y2
         ); 
 
         // Draw the frame for each block that's part of 'goodblocks'
@@ -128,8 +128,8 @@ void draw_goodblock_energy()
         
         // now, draw another block do show where the 'gooblocks' are: 
         auto block_frame =  new TBox(
-            row-0.5,col-0.5,    //x1,y1
-            row+0.5,col+0.5     //x2,y2
+            col-0.5,row-0.5,    //x1,y1
+            col+0.5,row+0.5     //x2,y2
         ); 
 
         block_frame->SetFillColor(kBlack);
