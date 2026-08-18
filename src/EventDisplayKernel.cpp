@@ -474,9 +474,7 @@ void EventDisplayKernel::DrawEventIndex(size_t index)
     fEventIndex = index; 
     fEventNumber = fEventNumbers[index];
     
-    std::cout << "drawing event "<<fEventNumber<<"..." << std::flush; 
     DrawCurrentEvent(); 
-    std::cout << "done.\n" << std::flush; 
 }
 //________________________________________________________________________________________________
 void EventDisplayKernel::DrawCurrentEvent()
