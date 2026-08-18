@@ -417,7 +417,14 @@ void EventDisplayKernel::LaunchGUI()
         std::exit(1);
         return; 
     }
-    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400);
+    
+    //get list of all windows
+    std::vector<std::string> window_names; 
+    window_names.reserve(fUserWindows.size());
+
+    for (const auto& window : fUserWindows) window_names.emplace_back(window->GetName());
+
+    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names);
 }
 
 //________________________________________________________________________________________________
@@ -476,6 +483,7 @@ void EventDisplayKernel::DrawCurrentEvent()
 {
     std::printf("drawing event %u...", fEventNumber);
 
+
     //run each (active) event-drawing function (in order!)
     /*for (const auto& draw_function : fDrawFunctions) {
         if(draw_function.is_active) { draw_function.fcn(); } 
@@ -483,14 +491,22 @@ void EventDisplayKernel::DrawCurrentEvent()
     //loop over all drawn functions, to register each of the requested branches
     for (auto& user_window : fUserWindows) {
 
+#ifdef DEBUG
+        const char* const window_name = user_window->GetName().c_str(); 
+#endif
         //if the winow is inactive, skip it. 
         if (fAppState == AppState::kActive) {
-            if (!user_window->IsActive()) continue; 
+            if (!user_window->IsActive()) {
+#ifdef DEBUG
+                Info(__func__, "UserWindow %s is inactive, skipping it.", window_name); 
+#endif        
+                continue;      
+            } 
         }
 
         try {
 #ifdef DEBUG
-            Info(__func__, "Trying to draw UserWindow: %s", user_window->GetName().c_str()); 
+            Info(__func__, "Trying to draw UserWindow: %s (Event draw routine)", window_name); 
 #endif
             //tell this user window that its canvas is the active one. 
             // this is important, because users may ask the kernel for access to the current canvas, and this method
@@ -498,7 +514,7 @@ void EventDisplayKernel::DrawCurrentEvent()
             user_window->DoDrawEvent(fMyKey);
 
 #ifdef DEBUG
-            Info(__func__, "Trying to draw UserWindow: %s", user_window->GetName().c_str()); 
+            Info(__func__, "Trying to draw UserWindow: %s (Timestamp draw routine)", window_name); 
 #endif
             //std::printf("in <EventDisplayKernel::%s>: attempting to evaluate DrawFunction '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
 
@@ -529,8 +545,18 @@ void EventDisplayKernel::DoDrawTimestamp(Key<EventGUI>, double timestamp)
     //loop over all drawn functions, to register each of the requested branches
     for (auto& user_window : fUserWindows) {
 
+#ifdef DEBUG
+        const char* const window_name = user_window->GetName().c_str(); 
+#endif
         //if the winow is inactive, skip it. 
-        if (!user_window || !user_window->IsActive()) continue; 
+        if (fAppState == AppState::kActive) {
+            if (!user_window->IsActive()) {
+#ifdef DEBUG
+                Info(__func__, "UserWindow %s is inactive, skipping it.", window_name); 
+#endif        
+                continue;      
+            } 
+        }
 
         try {
 #ifdef DEBUG
@@ -609,6 +635,50 @@ void EventDisplayKernel::AddUserWindow(std::string window_name, UInt_t width, UI
 //________________________________________________________________________________________________
 void EventDisplayKernel::CloseApp(Key<EventGUI>) { gApplication->Terminate(0); };
 //________________________________________________________________________________________________
+void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, bool activate_window)
+{
+    //search the list of windows, to make sure it exsits. 
+    UserWindow* my_window=nullptr; 
+    for (auto& window : fUserWindows) {
+        if (window->GetName() == window_name) { my_window = window.get(); break; }
+    }
+
+    if (my_window == nullptr) {
+        Error(__func__,
+            "Cannot toggle window '%s'; a window with this name could not be found in the list of added windows.",
+            window_name.c_str()
+        );  
+        std::exit(1);
+    }   
+
+    // if the window is inactive AND the GUI signaled to activate it... 
+    if (activate_window==true &&  my_window->IsActive()==false) {
+#ifdef DEBUG
+        Info(__func__, "Activating window '%s'...", window_name.c_str());
+#endif
+        my_window->DoActivate(fMyKey);
+#ifdef DEBUG 
+        Info(__func__, "Updating event picture...");
+#endif
+        DrawCurrentEvent(); 
+#ifdef DEBUG 
+        Info(__func__, "done.");
+#endif
+        return; 
+    } 
+
+    // if the window is active AND the GUI singnaled to deactivate it... 
+    if (activate_window==false && my_window->IsActive()==true) {
+#ifdef DEBUGf
+        Info(__func__, "Deactivating window '%s'...", window_name.c_str());
+#endif
+        my_window->DoDeactivate();
+#ifdef DEBUG 
+        Info(__func__, "done.");
+#endif
+        return; 
+    } 
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

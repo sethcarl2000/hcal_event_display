@@ -26,6 +26,7 @@
 #include <vector> 
 #include <memory> 
 #include <typeinfo> 
+#include <utility> 
 
 //enum to identify different data type requests 
 enum class dtype {
@@ -190,9 +191,10 @@ public:
     void DoNextEvent(Key<EventGUI>); 
     void DoPrevEvent(Key<EventGUI>);  
     void CloseApp(Key<EventGUI>);
-
     void DoDrawTimestamp(Key<EventGUI>, double timestamp);
-
+    void DoToggleWindow(Key<EventGUI>, std::string window_name, bool is_active);
+    
+    // methods that connect to UserWindow
     void SetCanvas(Key<UserWindow>, TCanvas* canv) { fCurrentCanvas=canv; }
     void SetUserWindow(Key<UserWindow>, UserWindow* window) { fCurrentUserWindow=window; }
 }; 
