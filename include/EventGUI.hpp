@@ -86,8 +86,7 @@ public:
 
     void ToggleWindow(); // slot
 
-
-    ClassDefOverride(ToggleWindowsPanel,0);
+    ClassDef(ToggleWindowsPanel,0);
 };
 
 
@@ -127,7 +126,7 @@ public:
     // this siganl tells the GUI that a new event has beeen picked
     void NewEventIndex(Key<EventGUI>, size_t index); 
 
-    ClassDefOverride(EventControlPanel,0);
+    ClassDef(EventControlPanel,0);
 };
 
 #endif
