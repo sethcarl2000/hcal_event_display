@@ -24,6 +24,10 @@ set(sources
     src/UserApp.cpp
     src/UserWindow.cpp
     src/EventGUI.cpp
+#   
+#   widgets
+    src/widgets/EventControlPanel.cpp
+    src/widgets/ToggleWindowsPanel.cpp
 #    src/PrivateMessenger.cpp
 )
 
