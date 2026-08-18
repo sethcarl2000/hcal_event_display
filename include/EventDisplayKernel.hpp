@@ -107,9 +107,6 @@ private:
     //Launches GUI 
     void LaunchGUI();
 
-    // 
-    void DrawEventIndex(size_t event_index); 
-
     /// @brief Find event index corresponding to event number
     /// @param event_number event number from ROOT file
     /// @return event index in indexed list of events 
@@ -181,22 +178,32 @@ public:
     TCanvas* GetCanvas(); 
 
     //the 'event number', as it appears in the rootfile
-    inline UInt_t GetEventNumber() const { return fEventNumber; } 
+    UInt_t GetEventNumber() const { return fEventNumber; } 
 
+    UInt_t GetEventNumber(size_t index); 
+
+    /// @return total number of events loaded from the current file. 
+    size_t GetNEvents() const { return fEventNumbers.size(); };
 
     // These are methods that the user _cannot_ invoke, so we require that classes with explicit permission pass us a 'signal key' object
     // (which only those classes can construct).
     //
-    //methods that connect to GUI buttons
+    //methods that connect to GUI buttons 
     void DoNextEvent(Key<EventGUI>); 
     void DoPrevEvent(Key<EventGUI>);  
     void CloseApp(Key<EventGUI>);
     void DoDrawTimestamp(Key<EventGUI>, double timestamp);
     void DoToggleWindow(Key<EventGUI>, std::string window_name, bool is_active);
     
+    /// @brief Draw requested event index. abort app if illegal request is made. 
+    /// @tparam T The class which is allowed to call this method (EventGUI or EventDisplayKernel ONLY)
+    /// @param event_index the index of event to draw. 
+    template<typename T> void SetEventIndex(Key<T>, size_t event_index); 
+
     // methods that connect to UserWindow
     void SetCanvas(Key<UserWindow>, TCanvas* canv) { fCurrentCanvas=canv; }
     void SetUserWindow(Key<UserWindow>, UserWindow* window) { fCurrentUserWindow=window; }
+
 }; 
 
 

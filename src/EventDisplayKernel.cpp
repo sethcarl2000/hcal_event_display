@@ -119,7 +119,11 @@ void EventDisplayKernel::LaunchApp()
     //activate all windows, by default. 
     for (auto& user_window : fUserWindows) user_window->DoActivate(fMyKey); 
 
-    fEventIndex=0; 
+    //this should propagate the information about the first event down to all the sub-windows + the GUI 
+    SetEventIndex(fMyKey, 0);
+    return; 
+
+
     for (auto& user_window : fUserWindows) {
 #ifdef DEBUG
         const char* const window_name = user_window->GetName().c_str(); 
@@ -424,7 +428,7 @@ void EventDisplayKernel::LaunchGUI()
 
     for (const auto& window : fUserWindows) window_names.emplace_back(window->GetName());
 
-    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names);
+    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names, GetNEvents()-1);
 }
 
 //________________________________________________________________________________________________
@@ -443,39 +447,47 @@ TCanvas* EventDisplayKernel::GetCanvas()
 //________________________________________________________________________________________________
 void EventDisplayKernel::DoNextEvent(Key<EventGUI>)
 {
-    if (fEventIndex < fEventNumbers.size()-1) {
-        ++fEventIndex; 
+    if(size_t index = GetEventIndex(); index < GetNEvents()-1) {
+        SetEventIndex(fMyKey, index+1);  
     } else {
-        Info(__func__, "Cannont load next event; %u is already the max. event in the list.", fEventNumbers.back());
+        Info(__func__, "%u is the min. event in the list", fEventNumbers.front());
     }
-
-    DrawCurrentEvent(); 
 }
 //________________________________________________________________________________________________
 void EventDisplayKernel::DoPrevEvent(Key<EventGUI>)
 {
-    if (fEventIndex > 0) {
-        --fEventIndex; 
+    if(size_t index = GetEventIndex(); index > 0) {
+        SetEventIndex(fMyKey, index-1);  
     } else {
         Info(__func__, "%u is the min. event in the list", fEventNumbers.front());
     }
-
-    DrawCurrentEvent(); 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::DrawEventIndex(size_t index)
+template<typename T> void EventDisplayKernel::SetEventIndex(Key<T>, size_t index)
 {
+    //if (index == fEventIndex) return; //noop 
     if (index >= fEventNumbers.size()) {
         Error(__func__, "illegal event index: %zi (valid range is 0-%zi).", index, fEventNumbers.size()-1);
         std::exit(1);
         return; 
     }
 
+    //accept this new event index
     fEventIndex = index; 
+    
+    // update the event number to match 
     fEventNumber = fEventNumbers[index];
+
+    //tell the GUI there's a new event index 
+    if (fGUI) fGUI->NewEventIndex(fMyKey, GetEventIndex());
     
     DrawCurrentEvent(); 
 }
+//________________________________________________________________________________________________
+// For the above method, the template arguments listed here represent the only two class types 
+// which are allowed to call this method. 
+//template<> void EventDisplayKernel::SetEventIndex(Key<EventDisplayKernel>, size_t index); // <- we (EventDisplayKernel) are allowed to call this function
+template<> void EventDisplayKernel::SetEventIndex(Key<EventGUI>,           size_t index); // <- EventGUI is allowed to call this method. 
 //________________________________________________________________________________________________
 void EventDisplayKernel::DrawCurrentEvent()
 {
@@ -686,6 +698,14 @@ void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, 
     } 
 }
 //________________________________________________________________________________________________
+UInt_t EventDisplayKernel::GetEventNumber(size_t index)
+{
+    if (index >= fEventNumbers.size()) {
+        Error(__func__, "Illegal event index %zi requested, valid range is [0-%zi]", index, fEventNumbers.size()-1);
+        std::exit(1);
+    }
+    return fEventNumbers[index];
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

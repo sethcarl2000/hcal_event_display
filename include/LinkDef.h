@@ -5,5 +5,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class EventGUI+;
+#pragma link C++ class EventControlPanel+; 
+#pragma link C++ class ToggleWindowsPanel+; 
 
 #endif 
