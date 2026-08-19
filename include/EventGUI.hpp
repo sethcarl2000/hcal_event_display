@@ -22,6 +22,7 @@ struct WindowCheckbox { std::string name; TGCheckButton* button; };
 
 class EventControlPanel; 
 class ToggleWindowsPanel; 
+class TimeControlPanel;
 
 class EventGUI : public TGMainFrame {
 
@@ -31,6 +32,8 @@ class EventGUI : public TGMainFrame {
     EventControlPanel* fEventControlPanel; 
     
     ToggleWindowsPanel* fToggleWindowsPanel; 
+
+    TimeControlPanel* fTimeControlPanel;
     //
     //TGHorizontalFrame *fFrame_buttons; 
     //TGTextButton *fGButton_next, *fGButton_prev; 
@@ -71,6 +74,8 @@ public:
     void NewEventIndex(Key<EventDisplayKernel>, size_t index); 
     // update status of all windows
     void SetWindowStatus(Key<EventDisplayKernel>, const std::vector<std::unique_ptr<UserWindow>>& windows);
+
+    TimeControlPanel* GetTimeControlPanel() { return fTimeControlPanel; }   
 
     ClassDefOverride(EventGUI,0);
 };
@@ -141,6 +146,40 @@ public:
     void NewEventIndex(Key<EventGUI>, size_t index); 
 
     ClassDef(EventControlPanel,0);
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//  Time Control Panel
+//  
+//  this panel holds all time controls the user can navigate & choose different timestamps with. 
+//
+class TimeControlPanel : public TGGroupFrame {
+private: 
+
+    double fTimestamp;
+
+    EventGUI* fParent; 
+
+    TGHSlider* fSlider;
+
+    TGLabel* fTimeLabel;
+
+    double fMinTimestamp{-100.}, fMaxTimestamp{+100.};
+
+    Key<TimeControlPanel> fMyKey{};
+
+public: 
+    TimeControlPanel(Key<EventGUI>, const TGWindow*, EventGUI* parent, UInt_t width);
+
+    // Signals (to propagate back to the kernel)
+    // signal (when the slider is moved)
+    void DoSliderMoved();
+
+    void SetTimestamp(Key<EventDisplayKernel>, double timestamp); 
+
+    ClassDef(TimeControlPanel,0);
 };
 
 #endif

@@ -27,6 +27,13 @@ EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, U
         fToggleWindowsPanel,
         new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
     ); 
+    
+    // Add the user window control panel
+    fTimeControlPanel = new TimeControlPanel(fMyKey, this, this, 500);
+    AddFrame(
+        fTimeControlPanel,
+        new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
+    ); 
 
     SetWindowName("Event Display controls");
     MapSubwindows();

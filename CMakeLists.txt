@@ -28,7 +28,7 @@ set(sources
 #   widgets
     src/widgets/EventControlPanel.cpp
     src/widgets/ToggleWindowsPanel.cpp
-#    src/PrivateMessenger.cpp
+    src/widgets/TimeControlPanel.cpp
 )
 
 add_library(EventDisplay SHARED ${sources} ${headers})

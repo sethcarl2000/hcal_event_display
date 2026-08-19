@@ -40,12 +40,9 @@ enum class dtype {
 
 //put here a list of classes that we're going to allow to propagate signals to the EventDisplayKernel (not the user!)
 class EventGUI; 
-class SignalKey {
-private: 
-    friend class EventGUI; 
-    friend class UserWindow; 
-    SignalKey() = default; 
-};
+
+class EventGUI; 
+class TimeControlPanel;
 
 //implementing this class as a meyer's singleton 
 class EventDisplayKernel {
@@ -128,6 +125,9 @@ private:
     //this variable stores the name of the current user-defined draw funciton. 
     std::string fCurrentDrawFunction{"none"}; 
 
+    //update the timestamp in the GUI and in each user window.
+    void UpdateTimestamp();
+
 public: 
 
     //delete copy constructor & copy assign. operator 
@@ -194,6 +194,8 @@ public:
     void CloseApp(Key<EventGUI>);
     void DoDrawTimestamp(Key<EventGUI>, double timestamp);
     void DoToggleWindow(Key<EventGUI>, std::string window_name, bool is_active);
+
+    void DoSetTimestamp(Key<TimeControlPanel>, double timestamp);
 
     // checek the status of each user window, and update the GUI accordingly.
     void SetWindowStatus(); 

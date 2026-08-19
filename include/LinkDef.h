@@ -7,5 +7,6 @@
 #pragma link C++ class EventGUI+;
 #pragma link C++ class EventControlPanel+; 
 #pragma link C++ class ToggleWindowsPanel+; 
+#pragma link C++ class TimeControlPanel+;
 
 #endif 

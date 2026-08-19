@@ -725,7 +725,24 @@ void EventDisplayKernel::SetWindowStatus()
     fGUI->SetWindowStatus(fMyKey, fUserWindows);
 }
 //________________________________________________________________________________________________
+void EventDisplayKernel::DoSetTimestamp(Key<TimeControlPanel>, double timestamp)
+{
+    fTimestamp = timestamp; 
+    UpdateTimestamp();
+}
 //________________________________________________________________________________________________
+void EventDisplayKernel::UpdateTimestamp()
+{
+    //inform the GUI about the updated timestamp
+    if (fGUI) fGUI->GetTimeControlPanel()->SetTimestamp(fMyKey, fTimestamp);
+
+    //inform each window about the updated timestamp
+    for (auto& user_window : fUserWindows) {
+        if (user_window->IsActive()) {
+            user_window->DoDrawTimestamp(fMyKey);
+        }
+    }
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
