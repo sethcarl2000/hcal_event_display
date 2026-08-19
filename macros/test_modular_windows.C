@@ -10,11 +10,15 @@
 #include <TColor.h>
 #include <TH2D.h> 
 #include <TAxis.h> 
+#include <TLine.h> 
 // stdlib headers
 #include <cmath> 
 #include <vector>
 #include <memory> 
 
+namespace {
+    constexpr double timing_window_size = 20.; //size of the timing window, in ns.
+};
 
 // given val from 0-1, return greyscale TColor
 Color_t GetGreyscale(double val); 
@@ -32,7 +36,8 @@ void draw_hcal_frame();
 //___________________________________________________________________________________________________________
 //___________________________________________________________________________________________________________
 //___________________________________________________________________________________________________________
-
+//___________________________________________________________________________________________________________
+void draw_time_hist();
 //___________________________________________________________________________________________________________
 void test_modular_windows()
 {
@@ -47,14 +52,11 @@ void test_modular_windows()
 
     kernel.AddDrawFunction("hcal", "goodblock_e", draw_goodblock_energy, Frequency::Type::kEachTimeStep);
 
+    // Add the 'kernel time hist' 
+    kernel.AddUserWindow("time", 900, 400);
 
-    // add our first user window (hcal)
-    kernel.AddUserWindow("hcal2", 500, 800);
-
-    // add our first drawn item
-    kernel.AddDrawFunction("hcal2", "frame", draw_hcal_frame, Frequency::Type::kEachEvent);
-
-    kernel.AddDrawFunction("hcal2", "goodblock_e", draw_goodblock_energy, Frequency::Type::kEachTimeStep);
+    kernel.AddDrawFunction("time", "goodblock_atime", draw_time_hist, Frequency::Type::kEachTimeStep);
+    
     // tell the kernel about the ROOT file we want to look at
     kernel.SetFile("e1209016_fullreplay_3013_stream0_2_seg1_1.root"); 
     kernel.SetTreeName("T"); 
@@ -71,7 +73,8 @@ void draw_hcal_frame()
 {
     auto th2d = new TH2D("h_2d", "H.Cal 'goodblocks';column;row;block energy (MeV)", 12,-0.5,12-0.5, 24,-0.5,24-0.5);
     th2d->GetZaxis()->SetRangeUser(0, 200); 
-    
+    th2d->SetStats(false);
+
     auto& kernel = EventDisplayKernel::Instance(); 
     kernel.Draw(th2d, "colz"); 
 }
@@ -83,12 +86,18 @@ void draw_goodblock_energy()
 
     //get our data for this event
     
+    const double time_cut = timing_window_size/2.; // +/- this value, blocks are kept (ns) 
+
+    //get the current-selected time. 
+    double timestamp = kernel.GetTimestamp();
+
     //energy 
     br_array<double> blocks_e   = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.e");  
 
     //row & column 
-    br_array<double> blocks_row = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.row");
-    br_array<double> blocks_col = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.col");   
+    br_array<double> blocks_row     = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.row");
+    br_array<double> blocks_col     = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.col");   
+    br_array<double> blocks_time    = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.atime");
 
     //now, loop over all of them, and draw a 'box' for each block
 
@@ -99,6 +108,7 @@ void draw_goodblock_energy()
 
     for (int i=0; i<n_blocks; i++) {
 
+        if (std::fabs(blocks_time[i] - timestamp) > time_cut) continue;
         // Now, draw the fill of the box based on how much energy there is. 
 
         // get the row/column for this block
@@ -147,6 +157,34 @@ void draw_goodblock_energy()
         kernel.Draw(block_frame, "SAME");
 
     }
+}
+//___________________________________________________________________________________________________________
+void draw_time_hist()
+{
+    auto hist = new TH1D("h_time", "H.Cal 'goodblocks' time;block time (ns);block energy (MeV)", 50, -100., +150.);
+    auto& kernel = EventDisplayKernel::Instance();
+    //kernel.Draw(hist, "HIST");
+
+    const br_array<double>& blocks_time = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.atime");
+    const br_array<double>& blocks_e    = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.e");
+
+    for (size_t i=0; i<blocks_time.size(); i++) { hist->Fill(blocks_time[i], 100.*blocks_e[i]); }
+
+    kernel.Draw(hist, "HIST");
+
+    if (kernel.GetAppState() != EventDisplayKernel::AppState::kActive) return;
+
+    double max = hist->GetMaximum(); 
+    double timestamp = kernel.GetTimestamp();
+    auto box = new TBox(timestamp-timing_window_size/2., 0., timestamp+timing_window_size/2., max);
+    box->SetFillColor(kRed);
+    box->SetFillStyle(3004);
+    kernel.Draw(box);
+    return;
+    
+    /*auto coinc_line = new TLine(kernel.GetTimestamp(), 0., kernel.GetTimestamp(), hist->GetMaximum());
+    coinc_line->SetLineColor(kRed); 
+    kernel.Draw(coinc_line);*/ 
 }
 //___________________________________________________________________________________________________________
 Color_t GetGreyscale(double val) {
