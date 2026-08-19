@@ -454,7 +454,7 @@ void EventDisplayKernel::LaunchGUI()
 
     for (const auto& window : fUserWindows) window_names.emplace_back(window->GetName());
 
-    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names, GetNEvents()-1);
+    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names);
 }
 
 //________________________________________________________________________________________________
@@ -697,6 +697,8 @@ void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, 
 #endif
         return; 
     } 
+
+    fGUI->SetWindowStatus(fMyKey, fUserWindows);
 }
 //________________________________________________________________________________________________
 UInt_t EventDisplayKernel::GetEventNumber(size_t index)

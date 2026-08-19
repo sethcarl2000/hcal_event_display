@@ -9,21 +9,22 @@
 
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
-EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, UInt_t h, const std::vector<std::string>& window_names, size_t max_event_index)
+EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, UInt_t h, const std::vector<std::string>& window_names)
     : TGMainFrame( gClient->GetRoot(), w, h ) 
 {
     SetCleanup(kDeepCleanup); 
 
     // Add the event control panel
-    fEventControlPanel = new EventControlPanel(fMyKey, this, this, max_event_index);
+    fEventControlPanel = new EventControlPanel(fMyKey, this, this, 500);
     AddFrame(
         fEventControlPanel,
         new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
     );
 
-    // Add the user window control panel 
+    // Add the user window control panel
+    fToggleWindowsPanel = new ToggleWindowsPanel(fMyKey, this, this, window_names);
     AddFrame(
-        new ToggleWindowsPanel(fMyKey, this, this, window_names),
+        fToggleWindowsPanel,
         new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
     ); 
 
@@ -55,7 +56,8 @@ void EventGUI::SetEventIndex(size_t index)
     EventDisplayKernel::Instance().SetEventIndex(fMyKey, index);
 }
 //________________________________________________________________________________________________
-void EventGUI::ToggleWindow(const std::string& window_name, bool do_activate) 
+//________________________________________________________________________________________________
+void EventGUI::DoToggleWindow(const std::string& window_name, bool do_activate) 
 {
     auto& kernel = EventDisplayKernel::Instance(); 
 
@@ -72,6 +74,10 @@ void EventGUI::NewEventIndex(Key<EventDisplayKernel>, size_t index)
     fEventControlPanel->NewEventIndex(fMyKey, index);
 }
 //________________________________________________________________________________________________
+void EventGUI::SetWindowStatus(Key<EventDisplayKernel>, const std::vector<std::unique_ptr<UserWindow>>& windows)
+{
+    fToggleWindowsPanel->SetWindowStatus(fMyKey, windows);
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

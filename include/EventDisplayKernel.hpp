@@ -102,7 +102,7 @@ private:
     ROOT::VecOps::RVec<UInt_t> fEventNumbers; 
 
 
-    inline size_t GetEventIndex() const { return fEventIndex; } 
+    size_t GetEventIndex() const { return fEventIndex; } 
 
     //Launches GUI 
     void LaunchGUI();
@@ -171,7 +171,7 @@ public:
     void Draw(TObject* object, const char* option=""); 
 
     //dimensions of canvas to be drawn. 
-    inline void SetCanvasDim(double x0, double y0, double x1, double y1) { fX0=x0; fX1=x1; fY0=y0; fY1=y1; }; 
+    void SetCanvasDim(double x0, double y0, double x1, double y1) { fX0=x0; fX1=x1; fY0=y0; fY1=y1; }; 
 
     /// @brief Returns canvas on which the current objects are being drawn 
     /// @return ptr to canvas on which objects are being drawn. nullptr if it does not exist

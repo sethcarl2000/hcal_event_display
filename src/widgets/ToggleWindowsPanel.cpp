@@ -1,6 +1,8 @@
 #include <EventGUI.hpp>
+#include <UserWindow.hpp>
 //stdlib headers
 #include <algorithm> 
+#include <cstdlib> 
 
 //________________________________________________________________________________________________
 ToggleWindowsPanel::ToggleWindowsPanel(Key<EventGUI>, const TGWindow* ptr, EventGUI* parent, const std::vector<std::string>& window_names)
@@ -29,7 +31,7 @@ ToggleWindowsPanel::ToggleWindowsPanel(Key<EventGUI>, const TGWindow* ptr, Event
     }
 }
 //________________________________________________________________________________________________
-void ToggleWindowsPanel::ToggleWindow()
+void ToggleWindowsPanel::DoToggleWindow()
 {
     auto clicked_button = static_cast<TGCheckButton*>(gTQSender);
 
@@ -70,9 +72,41 @@ void ToggleWindowsPanel::ToggleWindow()
     Info(__func__, "Task: %s", (do_activate ? "Activate" : "Deactivate"));
 #endif
 
-    fParent->ToggleWindow(window_checkbox.name, do_activate);
+    fParent->DoToggleWindow(window_checkbox.name, do_activate);
 }
 //________________________________________________________________________________________________
+void ToggleWindowsPanel::SetWindowStatus(Key<EventGUI>, const std::vector<std::unique_ptr<UserWindow>>& windows)
+{
+    //loop over all windows
+    for (const auto& window : windows) {
+        
+        if (!window) {
+            Error(__func__, "Somehow, window that we were handed is null (this should not be possible...)"); 
+            std::exit(1);
+            return; 
+        }
+
+        //name of the window whose status we want to update 
+        const auto& name = window->GetName(); 
+
+        //look for the button corresponding to this window 
+        auto find_it = std::find_if(
+            fToggleWindowButtons.begin(), 
+            fToggleWindowButtons.end(),
+            [&name](const WindowCheckbox& checkbox) { return checkbox.name == name; }
+        ); 
+        
+        if (find_it == fToggleWindowButtons.end()) {
+            Error(__func__, "Requested to toggle window with button '%s', but a matching button could not be found.", name.c_str());
+            std::exit(1);
+            return;
+        } 
+
+        //make sure the button reflects the state of the window
+        auto& button = find_it->button; 
+        button->SetState(window->IsActive() ? kButtonDown : kButtonUp);
+    }
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

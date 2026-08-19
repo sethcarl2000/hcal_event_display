@@ -8,16 +8,20 @@
 #include <TGFrame.h> 
 #include <TGButton.h> 
 #include <TGLabel.h>
+#include <TGSlider.h>
 // stdlib headers 
 #include <map> 
 #include <string> 
 #include <vector> 
+#include <memory> 
 
+class UserWindow; 
 class EventDisplayKernel;
 
 struct WindowCheckbox { std::string name; TGCheckButton* button; };  
 
 class EventControlPanel; 
+class ToggleWindowsPanel; 
 
 class EventGUI : public TGMainFrame {
 
@@ -25,10 +29,14 @@ class EventGUI : public TGMainFrame {
     Key<EventGUI> fMyKey{}; 
 
     EventControlPanel* fEventControlPanel; 
+    
+    ToggleWindowsPanel* fToggleWindowsPanel; 
     //
     //TGHorizontalFrame *fFrame_buttons; 
     //TGTextButton *fGButton_next, *fGButton_prev; 
     //TGLabel *fGLabel_eventNumber; 
+
+
 
 public: 
 
@@ -38,8 +46,7 @@ public:
         Key<EventDisplayKernel>,
         const TGWindow* ptr,
         UInt_t w, UInt_t h,
-        const std::vector<std::string>& window_names,
-        size_t max_event_index
+        const std::vector<std::string>& window_names
     ); 
 
     // some methods we need to override
@@ -55,13 +62,15 @@ public:
     void SetEventIndex(size_t index); 
 
     // toggles visibility of each window. window id's start at 0 for the first window, and go in the order in which they are listed for us by the kernel in the EventGUI constructor. 
-    void ToggleWindow(const std::string& window_name, bool do_activate);
+    void DoToggleWindow(const std::string& window_name, bool do_activate);
 
     void CloseWindow() override; 
 
 
     // this siganl tells the GUI that a new event has beeen picked
     void NewEventIndex(Key<EventDisplayKernel>, size_t index); 
+    // update status of all windows
+    void SetWindowStatus(Key<EventDisplayKernel>, const std::vector<std::unique_ptr<UserWindow>>& windows);
 
     ClassDefOverride(EventGUI,0);
 };
@@ -84,7 +93,9 @@ private:
 public: 
     ToggleWindowsPanel(Key<EventGUI>, const TGWindow*, EventGUI* parent, const std::vector<std::string>& window_names);
 
-    void ToggleWindow(); // slot
+    void SetWindowStatus(Key<EventGUI>, const std::vector<std::unique_ptr<UserWindow>>& windows);
+
+    void DoToggleWindow(); // slot
 
     ClassDef(ToggleWindowsPanel,0);
 };
@@ -102,8 +113,9 @@ private:
     TRandom3 fRand; 
 
     TGLabel* fEventLabel; 
+    TGHSlider* fSlider; 
 
-    size_t fMaxEventIndex, fEventIndex; 
+    size_t fEventIndex; 
     UInt_t fEventNumber; 
 
     EventGUI* fParent; 
@@ -112,7 +124,7 @@ private:
     std::vector<WindowCheckbox> fToggleWindowButtons;  
 
 public: 
-    EventControlPanel(Key<EventGUI>, const TGWindow*, EventGUI* parent, size_t fMaxEventIndex);
+    EventControlPanel(Key<EventGUI>, const TGWindow*, EventGUI* parent, UInt_t width);
 
     // Signals (to propagate back to the kernel)
     //
@@ -120,6 +132,8 @@ public:
     void DoNextEvent() { fParent->DoNextEvent(); } 
     // Move to the prev. event
     void DoPrevEvent() { fParent->DoPrevEvent(); }
+    // Update the event slider
+    void DoSliderReleased(); 
     // Pick a random event
     void DoRandomEvent(); 
 
