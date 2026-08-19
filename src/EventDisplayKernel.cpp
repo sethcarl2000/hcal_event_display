@@ -644,7 +644,12 @@ void EventDisplayKernel::AddUserWindow(std::string window_name, UInt_t width, UI
 #endif
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::CloseApp(Key<EventGUI>) { gApplication->Terminate(0); };
+void EventDisplayKernel::CloseApp(Key<EventGUI>) { 
+
+    if (fGUI) fGUI->DeleteWindow();
+    for (const auto& window : fUserWindows) { if (window) window->DoDeactivate(); }
+    gApplication->Terminate(0); 
+};
 //________________________________________________________________________________________________
 void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, bool activate_window)
 {
@@ -698,7 +703,8 @@ void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, 
         return; 
     } 
 
-    fGUI->SetWindowStatus(fMyKey, fUserWindows);
+    //update the GUI's window active status
+    SetWindowStatus();
 }
 //________________________________________________________________________________________________
 UInt_t EventDisplayKernel::GetEventNumber(size_t index)
@@ -710,6 +716,14 @@ UInt_t EventDisplayKernel::GetEventNumber(size_t index)
     return fEventNumbers[index];
 }
 //________________________________________________________________________________________________
+void EventDisplayKernel::SetWindowStatus()
+{
+    if (!fGUI) {
+        Error(__func__, "GUI object is null, cannot set window status.");
+        std::exit(1);
+    }
+    fGUI->SetWindowStatus(fMyKey, fUserWindows);
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

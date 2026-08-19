@@ -17,12 +17,16 @@ namespace {
 //__________________________________________________________________________________________________________________________
 UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_t w, UInt_t h)
     : TGMainFrame(ptr, w, h), fParent{parent}
-{
+{    
+
     //let's do some dummy checks
     if (fParent == nullptr) {
         Error(__func__, "User app constructor called with 'null' parent ptr."); 
         std::exit(1); 
     }
+
+    //set cleanup so all widgets the user allocates will be cleaned up. 
+    SetCleanup(kDeepCleanup); 
 
     const auto window_name = parent->GetName().c_str(); 
 
@@ -55,9 +59,6 @@ UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_
     Resize(GetDefaultSize()); 
     MapSubwindows(); 
 
-    //set cleanup so all widgets the user allocates will be cleaned up. 
-    SetCleanup(kDeepCleanup); 
-
 #ifdef DEBUG
     Info(__func__, "<UserWindow: %s>: Exiting app constructor", window_name); 
 #endif
@@ -65,14 +66,26 @@ UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_
 //__________________________________________________________________________________________________________________________
 void UserApp::CloseWindow()
 {
-    Cleanup(); 
-    //notify the parent that this app has been closed
-    //fParent->DoDeactivate(); 
-    //delete this app 
-    DeleteWindow(); 
+#ifdef DEBUG
+    Info(__func__, "<window: %s>: called. deleting window...", fParent ? fParent->GetName().c_str() : "null");
+#endif
+    DeleteWindow();
 }
 //__________________________________________________________________________________________________________________________
-UserApp::~UserApp() { Cleanup(); }
+UserApp::~UserApp() 
+{ 
+#ifdef DEBUG
+    Info(__func__, "<window: %s>: destructor called.", fParent ? fParent->GetName().c_str() : "null");
+#endif
+    if (fParent) {
+        fParent->DoDeactivate(); 
+    } else {
+        Error(__func__, "UserApp destructor called with null parent ptr."); 
+        std::exit(1);
+        return; 
+    }
+    Cleanup(); 
+}
 //__________________________________________________________________________________________________________________________
 TCanvas* UserApp::GetCanvas()
 {

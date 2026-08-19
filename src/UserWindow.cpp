@@ -126,7 +126,12 @@ void UserWindow::DoActivate(Key<EventDisplayKernel>)
 //__________________________________________________________________________________________________________________________
 void UserWindow::DoDeactivate()
 {
-    if (fApp) { delete fApp; fApp = nullptr; }
+    if (fApp) { 
+        fApp->DeleteWindow(); 
+        fApp = nullptr; 
+    }
+    auto& kernel = EventDisplayKernel::Instance();
+    kernel.SetWindowStatus();
 }
 //__________________________________________________________________________________________________________________________
 void UserWindow::cd()

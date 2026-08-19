@@ -22,7 +22,7 @@ ToggleWindowsPanel::ToggleWindowsPanel(Key<EventGUI>, const TGWindow* ptr, Event
 
         auto button = new TGCheckButton(this, name.c_str(), button_id);
         button->SetState(kButtonDown);
-        button->Connect("Toggled(Bool_t)", "ToggleWindowsPanel", this, "ToggleWindow()"); 
+        button->Connect("Toggled(Bool_t)", "ToggleWindowsPanel", this, "DoToggleWindow()"); 
         ++button_id; 
 
         AddFrame(button, new TGLayoutHints(kLHintsBottom | kLHintsLeft, 5, 5, 0, 0)); 

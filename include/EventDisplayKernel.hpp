@@ -194,6 +194,9 @@ public:
     void CloseApp(Key<EventGUI>);
     void DoDrawTimestamp(Key<EventGUI>, double timestamp);
     void DoToggleWindow(Key<EventGUI>, std::string window_name, bool is_active);
+
+    // checek the status of each user window, and update the GUI accordingly.
+    void SetWindowStatus(); 
     
     /// @brief Draw requested event index. abort app if illegal request is made. 
     /// @tparam T The class which is allowed to call this method (EventGUI or EventDisplayKernel ONLY)
