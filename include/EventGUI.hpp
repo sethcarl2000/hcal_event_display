@@ -166,7 +166,7 @@ private:
 
     TGLabel* fTimeLabel;
 
-    double fMinTimestamp{-100.}, fMaxTimestamp{+100.};
+    double fMinTimestamp{-100.}, fMaxTimestamp{+150.};
 
     Key<TimeControlPanel> fMyKey{};
 

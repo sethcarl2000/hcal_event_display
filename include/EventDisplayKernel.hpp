@@ -98,7 +98,6 @@ private:
 
     ROOT::VecOps::RVec<UInt_t> fEventNumbers; 
 
-
     size_t GetEventIndex() const { return fEventIndex; } 
 
     //Launches GUI 
