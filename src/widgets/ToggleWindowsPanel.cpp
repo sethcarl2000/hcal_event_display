@@ -77,9 +77,17 @@ void ToggleWindowsPanel::DoToggleWindow()
 //________________________________________________________________________________________________
 void ToggleWindowsPanel::SetWindowStatus(Key<EventGUI>, const std::vector<std::unique_ptr<UserWindow>>& windows)
 {
+#ifdef DEBUG
+    Info(__func__, "in body");
+    size_t i=0; 
+#endif
+
     //loop over all windows
     for (const auto& window : windows) {
-        
+#ifdef DEBUG
+        Info(__func__, "Processing window %zi / %zi", ++i, windows.size());
+#endif
+
         if (!window) {
             Error(__func__, "Somehow, window that we were handed is null (this should not be possible...)"); 
             std::exit(1);
@@ -88,6 +96,9 @@ void ToggleWindowsPanel::SetWindowStatus(Key<EventGUI>, const std::vector<std::u
 
         //name of the window whose status we want to update 
         const auto& name = window->GetName(); 
+#ifdef DEBUG
+        Info(__func__, "processing window '%s'", name.c_str());
+#endif
 
         //look for the button corresponding to this window 
         auto find_it = std::find_if(
@@ -106,6 +117,9 @@ void ToggleWindowsPanel::SetWindowStatus(Key<EventGUI>, const std::vector<std::u
         auto& button = find_it->button; 
         button->SetState(window->IsActive() ? kButtonDown : kButtonUp);
     }
+#ifdef DEBUG
+    Info(__func__, "leaving body");
+#endif
 }
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

@@ -43,9 +43,18 @@ EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, U
 //________________________________________________________________________________________________
 void EventGUI::CloseWindow()
 {
+#ifdef DEBUG
+    Info(__func__, "in body. calling Cleanup()...");
+#endif 
     Cleanup(); 
+#ifdef DEBUG
+    Info(__func__, "telling kernel to close app..");
+#endif 
     //tell the kernel that the user called for us to close the app
     EventDisplayKernel::Instance().CloseApp(fMyKey);
+#ifdef DEBUG
+    Info(__func__, "leaving body");
+#endif 
 }
 //________________________________________________________________________________________________
 void EventGUI::DoNextEvent()

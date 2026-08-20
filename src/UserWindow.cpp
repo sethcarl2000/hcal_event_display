@@ -126,12 +126,21 @@ void UserWindow::DoActivate(Key<EventDisplayKernel>)
 //__________________________________________________________________________________________________________________________
 void UserWindow::DoDeactivate()
 {
+#ifdef DEBUG
+    Info(__func__, "<window: %s> in body. deleting app...", GetName().c_str());
+#endif
     if (fApp) { 
         fApp->DeleteWindow(); 
         fApp = nullptr; 
     }
+#ifdef DEBUG
+    Info(__func__, "done deleting app. telling kernel to update window status...");
+#endif
     auto& kernel = EventDisplayKernel::Instance();
     kernel.SetWindowStatus();
+#ifdef DEBUG
+    Info(__func__, "done telling kernel to update window status. leaving body.");
+#endif
 }
 //__________________________________________________________________________________________________________________________
 void UserWindow::cd()

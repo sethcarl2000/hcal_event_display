@@ -644,11 +644,21 @@ void EventDisplayKernel::AddUserWindow(std::string window_name, UInt_t width, UI
 #endif
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::CloseApp(Key<EventGUI>) { 
-
+void EventDisplayKernel::CloseApp(Key<EventGUI>) 
+{ 
+#ifdef DEBUG
+    Info(__func__, "in body. deleting GUI...");
+#endif
     if (fGUI) fGUI->DeleteWindow();
+#ifdef DEBUG
+    Info(__func__, "done deleting GUI. deactivating all user windows...");
+#endif
     for (const auto& window : fUserWindows) { if (window) window->DoDeactivate(); }
-    gApplication->Terminate(0); 
+    //gApplication->Terminate(0); 
+    
+#ifdef DEBUG
+    Info(__func__, "done closing app");
+#endif
 };
 //________________________________________________________________________________________________
 void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, bool activate_window)
