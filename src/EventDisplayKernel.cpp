@@ -148,44 +148,6 @@ void EventDisplayKernel::LaunchApp()
     //this should propagate the information about the first event down to all the sub-windows + the GUI 
     SetEventIndex(fMyKey, 0);
     return; 
-
-
-    for (auto& user_window : fUserWindows) {
-#ifdef DEBUG
-        const char* const window_name = user_window->GetName().c_str(); 
-#endif
-        try {
-
-#ifdef DEBUG 
-            Info(__func__, "<window: %s> activating user window\n", window_name); 
-#endif
-            user_window->DoActivate(fMyKey);      
-#ifdef DEBUG 
-            Info(__func__, "<window: %s> drawing event draw functions...\n", window_name); 
-#endif
-            user_window->DoDrawEvent(fMyKey);
-#ifdef DEBUG 
-            Info(__func__, "<window: %s> drawing timestamp draw functions...\n", window_name); 
-#endif
-            user_window->DoDrawTimestamp(fMyKey);
-
-        } catch (const std::exception& e) {
-            
-            Error(__func__, "Something went wrong trying draw window / object: %s / %s.\n what(): %s", 
-                user_window->GetName().c_str(),
-                user_window->GetCurrentDrawFunctionName().c_str(), 
-                e.what()
-            );
-            std::exit(1);
-        }
-#ifdef DEBUG 
-        Info(__func__, "<window: %s> done.\n", window_name); 
-#endif
-    }
-    // do stuff that actually launches the GUI app...   
-    // 
-    // 
-    // ...
 }
 //________________________________________________________________________________________________
 ROOT::RDataFrame* EventDisplayKernel::GetDataFrame() 
@@ -212,7 +174,6 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
     //first, check the status of the app. 
     switch (fAppState) {
-        case AppState::kNone : { return T{}; break; }
 
         case AppState::kActive : { // We're in the 'run' phase ------------------------------------------------------------------------------
 
@@ -316,11 +277,10 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
                 //let the user know this branch was added successfully 
                 std::printf("in <EventDisplayKernel::GetData(init phase)>: Requested branch '%s' added. \n", branch_name.c_str());
             }
-
-            break; 
+            break;
         } 
-
     }
+
     return T{}; 
 }
 //________________________________________________________________________________________________
@@ -492,6 +452,7 @@ void EventDisplayKernel::DoPrevEvent(Key<EventGUI>)
 //________________________________________________________________________________________________
 void EventDisplayKernel::DrawCurrentEvent()
 {
+    if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
     std::printf("drawing event %u...", fEventNumber);
 
 
@@ -547,6 +508,8 @@ void EventDisplayKernel::DrawCurrentEvent()
 //________________________________________________________________________________________________
 void EventDisplayKernel::DoDrawTimestamp(Key<EventGUI>, double timestamp)
 {
+    if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
+
     fTimestamp = timestamp; 
 
     //run each (active) event-drawing function (in order!)
@@ -649,15 +612,16 @@ void EventDisplayKernel::CloseApp(Key<EventGUI>)
 #ifdef DEBUG
     Info(__func__, "in body. deleting GUI...");
 #endif
+    fAppState = AppState::kExit;
     if (fGUI) fGUI->DeleteWindow();
 #ifdef DEBUG
     Info(__func__, "done deleting GUI. deactivating all user windows...");
 #endif
     for (const auto& window : fUserWindows) { if (window) window->DoDeactivate(); }
-    //gApplication->Terminate(0); 
     
 #ifdef DEBUG
-    Info(__func__, "done closing app");
+    Info(__func__, "done closing app. terminating application...");
+    gApplication->Terminate(0);
 #endif
 };
 //________________________________________________________________________________________________
@@ -728,6 +692,8 @@ UInt_t EventDisplayKernel::GetEventNumber(size_t index)
 //________________________________________________________________________________________________
 void EventDisplayKernel::SetWindowStatus()
 {
+    if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
+
     if (!fGUI) {
         Error(__func__, "GUI object is null, cannot set window status.");
         std::exit(1);
@@ -743,6 +709,8 @@ void EventDisplayKernel::DoSetTimestamp(Key<TimeControlPanel>, double timestamp)
 //________________________________________________________________________________________________
 void EventDisplayKernel::UpdateTimestamp()
 {
+    if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
+
     //inform the GUI about the updated timestamp
     if (fGUI) fGUI->GetTimeControlPanel()->SetTimestamp(fMyKey, fTimestamp);
 

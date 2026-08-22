@@ -47,7 +47,7 @@ class TimeControlPanel;
 //implementing this class as a meyer's singleton 
 class EventDisplayKernel {
 public: 
-    enum class AppState { kNone=0, kInit, kActive };
+    enum class AppState { kNone=0, kInit, kActive, kExit };
 private: 
 
     /// this is the kernel's 'Key' which lets the kernel call some methods of other classes that no other class can call.  
