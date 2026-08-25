@@ -34,8 +34,7 @@ public:
         Key<UserWindow>,
         UserWindow* parent, 
         const TGWindow* ptr, 
-        UInt_t w, UInt_t h, 
-        const std::vector<UserSlider::SliderInfo>& sliders 
+        UInt_t w, UInt_t h
     );
 
     ~UserApp();     

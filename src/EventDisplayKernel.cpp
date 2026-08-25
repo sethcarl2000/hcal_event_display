@@ -416,7 +416,7 @@ void EventDisplayKernel::LaunchGUI()
 
     for (const auto& window : fUserWindows) window_names.emplace_back(window->GetName());
 
-    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names);
+    fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names, fUserParameters);
 }
 
 //________________________________________________________________________________________________
@@ -562,7 +562,7 @@ template<typename T> void EventDisplayKernel::DoDrawTimestamp(Key<T>, double tim
 template void EventDisplayKernel::DoDrawTimestamp(Key<EventGUI>, double timestamp);
 template void EventDisplayKernel::DoDrawTimestamp(Key<UserSlider>, double timestamp);
 //________________________________________________________________________________________________
-void EventDisplayKernel::AddDrawFunction(std::string window_name, std::string object_name, const std::function<void(void)>& fcn,  Frequency::Type type)
+void EventDisplayKernel::AddDrawFunction(const std::string& window_name, std::string object_name, const std::function<void(void)>& fcn,  Frequency::Type type)
 {
     //search through the list of window names, to find the one the user wants to add this function to. 
     UserWindow* my_window=nullptr; 
@@ -590,33 +590,35 @@ void EventDisplayKernel::AddDrawFunction(std::string window_name, std::string ob
 /// @param slider_name name of the slider
 /// @param min_val minimum value
 /// @param max_val maximum value 
-void EventDisplayKernel::AddUserSlider(std::string window_name, std::string slider_name, double min_val, double max_val)
+void EventDisplayKernel::AddUserSlider(const std::string& slider_name, double min_val, double max_val)
 {
-    //search through the list of window names, to find the one the user wants to add this function to. 
-    UserWindow* my_window=nullptr; 
-    for (auto& window : fUserWindows) {
-        if (window->GetName() == window_name) { my_window = window.get(); break; }
-    }
+    // search the list of paramters already added; make sure we aren't adding a duplicate. 
+    auto find_it = std::find_if(
+        fUserParameters.begin(),
+        fUserParameters.end(),
+        [&slider_name](const auto& param){ return slider_name == param.name; }
+    ); 
 
-    if (my_window == nullptr) {
+    if (find_it != fUserParameters.end()) {
         Error(__func__,
-            "Cannot add drawn item '%s' to window '%s'; a window with this name could not be found in the list of added windows. Make sure:\n"
-            "   1. the name is spelled exactly as it was when the window was added, and\n"
-            "   2. this draw function is added *after* the window is.",
-            slider_name.c_str(), window_name.c_str()
+            "Cannot add user parameter with name '%s'; a parameter with this name already exists (duplicate)", slider_name.c_str()
         );  
         std::exit(1);
+        return; 
     }   
 
-    my_window->AddUserSlider(fMyKey, slider_name, min_val, max_val); 
+    fUserParameters.emplace_back(slider_name, min_val, max_val); 
+
+    // 'set' the parameter once, to add it to the list of known parameters (before it's called by a user function!)
+    this->SetParameter<double>(slider_name, (min_val + max_val)/2.); 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::AddUserWindow(std::string window_name, UInt_t width, UInt_t height)
+void EventDisplayKernel::AddUserWindow(const std::string&  window_name, UInt_t width, UInt_t height)
 {
 #ifdef DEBUG
     Info(__func__, "in body. adding new window '%s'", window_name.c_str()); 
 #endif
-
+    
     //first, let's search the list of user-defined windows, to make sure this isn't a duplicate (not allowed -- fatal error!)
     for (const auto& window : fUserWindows) {
         if (window->GetName() == window_name) {

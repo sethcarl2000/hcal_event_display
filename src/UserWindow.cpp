@@ -119,7 +119,7 @@ void UserWindow::DoActivate(Key<EventDisplayKernel>)
     if (!IsActive()) {
 
         //initialize the app
-        fApp = new UserApp(fMyKey, this, gClient->GetRoot(), fWidth, fHeight, fSliders);
+        fApp = new UserApp(fMyKey, this, gClient->GetRoot(), fWidth, fHeight);
     }
 }
 
@@ -180,24 +180,6 @@ void UserWindow::AddDrawnItem(Key<EventDisplayKernel>, DrawFunction draw_functio
     draw_function_list.emplace_back( draw_function ); 
 
     std::printf("<window: %s>: Added drawn item '%s'.\n", GetName().c_str(), draw_function.name.c_str()); 
-}
-//__________________________________________________________________________________________________________________________
-void UserWindow::AddUserSlider(Key<EventDisplayKernel>, std::string param_name, double min, double max)
-{
-    //check list of user-parameters to make sure we don't already have this one 
-    //check to make sure another item with this same name is not already present. 
-    auto find_it = std::find_if(
-        fSliders.begin(), 
-        fSliders.end(), 
-        [&param_name](const UserSlider::SliderInfo& rhs){ return rhs.name == param_name; }
-    );
-    if (find_it != fSliders.end()) {
-        Warning(__func__, "User attepmted to add user slider '%s', but this already exists in list (duplicate will not be added).", param_name.c_str());
-        return;  
-    }
-
-    //add this slider to the list
-    fSliders.emplace_back( param_name, min, max ); 
 }
 //__________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________

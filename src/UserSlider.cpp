@@ -1,33 +1,34 @@
 #include <UserSlider.hpp>
 #include <EventDisplayKernel.hpp>
+#include <EventGUI.hpp>
 
 //____________________________________________________________________________________________________________
-UserSlider::UserSlider(Key<UserApp>, const TGWindow* ptr, UserApp* parent, UInt_t width, std::string param_name, double min, double max)
-    : TGGroupFrame(ptr, param_name.c_str()), 
+UserSlider::UserSlider(Key<UserParameterPanel>, const TGWindow* ptr, UserParameterPanel* parent, UInt_t width, const std::string& param_name, double min, double max)
+    : TGHorizontalFrame(ptr, width), 
     fParamName{param_name}, 
     fMinVal{min}, fMaxVal{max}
 {
-    ///////////////////////////////////////////////////////////////
-    //
-    //  This is the param information frame
-    //
-    auto frame_info = new TGHorizontalFrame(this, width, 50);
+    //label representing the name of the parameter
+    fParamNameLabel = new TGLabel(this, param_name.c_str()); 
+    AddFrame(
+        fParamNameLabel, 
+        new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5,5,5,5)
+    );
 
-    fParamLabel = new TGLabel(frame_info, Form("%s: none              :", fParamName.c_str()));
-    frame_info->AddFrame(fParamLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5,5,5,5)); 
-    AddFrame(frame_info, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 5,5,5,5));
+    //label represeting the value of the parameter 
+    fParamValueLabel = new TGLabel(this, Form(fFormatString.c_str(), (min+max)/2.)); 
+    AddFrame(
+        fParamValueLabel, 
+        new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5,5,5,5)
+    );
 
-
-    ///////////////////////////////////////////////////////////////
-    //
-    //  This is the slider's frame
-    //
-    auto frame_slider = new TGHorizontalFrame(this, width, 50);
-
-    fSlider = new TGHSlider(frame_slider, width);
+    // now, we add the actual slider
+    fSlider = new TGHSlider(this, width);
     fSlider->Connect("PositionChanged(Int_t)", "UserSlider", this, "DoSliderMoved()");
-    frame_slider->AddFrame(fSlider, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 5,5,5,5)); 
-    AddFrame(frame_slider, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 5,5,5,5));
+    AddFrame(
+        fSlider, 
+        new TGLayoutHints(kLHintsCenterX | kLHintsCenterY | kLHintsExpandX, 5,5,5,5)
+    );
 }
 //____________________________________________________________________________________________________________
 void UserSlider::DoSliderMoved()
@@ -43,10 +44,14 @@ void UserSlider::DoSliderMoved()
     // set this new event index 
     kernel.SetParameter<double>(fParamName, val); 
     
-    // refresh all the drawn windows 
+    // refresh all the drawn windows p-
+    // [[[[[[[[[[[[[[[[[[[[[[[[          7-l=kvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvmddddddddddddddddddddddddddddddddddddddddddddddddddddddddcX]]]]]]]]]]]]]]]]]]]]]]]]
+    //      - muon's comment
+
     kernel.DoDrawTimestamp(fMyKey, kernel.GetTimestamp()); 
     
-    fParamLabel->SetText(Form("%s: %f", fParamName.c_str(), val)); 
+    fParamValueLabel->SetText(Form(fFormatString.c_str(), val)); 
 }
 //____________________________________________________________________________________________________________
 //____________________________________________________________________________________________________________

@@ -17,6 +17,7 @@ set(headers
     include/UserWindow.hpp
     include/EventGUI.hpp
     include/UserSlider.hpp
+    include/UserParameter.hpp
 #    include/PrivateMessenger.hpp
 )
 
@@ -31,6 +32,7 @@ set(sources
     src/widgets/EventControlPanel.cpp
     src/widgets/ToggleWindowsPanel.cpp
     src/widgets/TimeControlPanel.cpp
+    src/widgets/UserParameterPanel.cpp
 )
 
 add_library(EventDisplay SHARED ${sources} ${headers})

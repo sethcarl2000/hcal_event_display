@@ -15,7 +15,7 @@ namespace {
 #endif
 
 //__________________________________________________________________________________________________________________________
-UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_t w, UInt_t h, const std::vector<UserSlider::SliderInfo>& sliders)
+UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_t w, UInt_t h)
     : TGMainFrame(ptr, w, h), fParent{parent}
 {    
 
@@ -48,16 +48,7 @@ UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_
         std::exit(1);
         return; 
     }
-
-    //now, add a new group frame
-    for (const auto& slider_info : sliders) {
-
-        auto slider = new UserSlider(fMyKey, this, this, w, slider_info.name, slider_info.min, slider_info.max); 
-        AddFrame(slider, new TGLayoutHints(kLHintsExpandX | kLHintsBottom, 2,2,2,2)); 
-    }
-
-    //AddFrame()
-
+    
     //set the name of this app 
     SetWindowName(window_name);
 

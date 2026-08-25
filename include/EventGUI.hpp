@@ -2,6 +2,7 @@
 #define EventGUI_hpp
 
 #include <Key.hpp>
+#include <UserParameter.hpp>
 // ROOT headers
 #include <TRandom3.h> 
 // TGUI headers
@@ -23,6 +24,7 @@ struct WindowCheckbox { std::string name; TGCheckButton* button; };
 class EventControlPanel; 
 class ToggleWindowsPanel; 
 class TimeControlPanel;
+class UserParameterPanel; 
 
 class EventGUI : public TGMainFrame {
 
@@ -34,10 +36,8 @@ class EventGUI : public TGMainFrame {
     ToggleWindowsPanel* fToggleWindowsPanel; 
 
     TimeControlPanel* fTimeControlPanel;
-    //
-    //TGHorizontalFrame *fFrame_buttons; 
-    //TGTextButton *fGButton_next, *fGButton_prev; 
-    //TGLabel *fGLabel_eventNumber; 
+    
+    UserParameterPanel* fUserParameterPanel; 
 
     bool fIsTimeSliderActive; 
 
@@ -50,7 +50,8 @@ public:
         Key<EventDisplayKernel>,
         const TGWindow* ptr,
         UInt_t w, UInt_t h,
-        const std::vector<std::string>& window_names
+        const std::vector<std::string>& window_names, 
+        const std::vector<UserParameter<double>>& user_parameters
     ); 
 
     // some methods we need to override
@@ -69,7 +70,6 @@ public:
     void DoToggleWindow(const std::string& window_name, bool do_activate);
 
     void CloseWindow() override; 
-
 
     // this siganl tells the GUI that a new event has beeen picked
     void NewEventIndex(Key<EventDisplayKernel>, size_t index); 
@@ -183,6 +183,34 @@ public:
     void SetTimestamp(Key<EventDisplayKernel>, double timestamp); 
 
     ClassDef(TimeControlPanel,0);
+};
+
+////////////////////////////////////////////////////////////////////////////////////////
+//
+//  User Parameter panel
+//  
+//  This panel holds all the user-defined parameters. 
+//
+class UserParameterPanel : public TGGroupFrame {
+private: 
+
+    UInt_t fWidth; 
+
+    Key<UserParameterPanel> fMyKey{};
+
+    EventGUI* fParent; 
+
+public: 
+    UserParameterPanel(Key<EventGUI>, const TGWindow*, EventGUI* parent, UInt_t width);
+
+    // Signals (to propagate back to the kernel)
+    // signal (when the slider is moved)
+    void DoSliderMoved();
+
+    //add a user-defined slider
+    void AddUserSlider(Key<EventGUI>, const std::string& param_name, double min, double max); 
+
+    ClassDef(UserParameterPanel,0);
 };
 
 #endif

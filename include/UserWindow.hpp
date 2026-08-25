@@ -38,9 +38,6 @@ private:
 
     UInt_t fWidth, fHeight; 
 
-    //user-sliders
-    std::vector<UserSlider::SliderInfo> fSliders;
-
     Frequency::Type fCurrentDrawFunctionFrequency{Frequency::Type::kEachEvent}; 
 
     std::string fCurrentDrawFunctionName{"none"};
@@ -92,8 +89,6 @@ public:
 
     //Add a drawn object to this window. 
     void AddDrawnItem(Key<EventDisplayKernel>, DrawFunction draw_function, Frequency::Type); 
-
-    void AddUserSlider(Key<EventDisplayKernel>, std::string param_name, double min, double max); 
 
     /// @brief Activate this user window, if it's deactivated. noop if it's already active. 
     /// see implemenation for a list of valid senders. 

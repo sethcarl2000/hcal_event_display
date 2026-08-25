@@ -13,7 +13,7 @@
 #include <vector> 
 #include <memory> 
  
-class UserApp; 
+class UserParameterPanel; 
 
 ////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -21,7 +21,7 @@ class UserApp;
 //  
 //  this panel holds all time controls the user can navigate & choose different timestamps with. 
 //
-class UserSlider : public TGGroupFrame {
+class UserSlider : public TGHorizontalFrame {
 private:    
 
     std::string fParamName{"none"}; 
@@ -29,11 +29,15 @@ private:
     double fMaxVal; 
     double fMinVal; 
 
-    UserApp* fParent; 
+    UserParameterPanel* fParent; 
 
     TGHSlider* fSlider;
 
-    TGLabel* fParamLabel;
+    //labels for the name & format of the string. 
+    TGLabel *fParamNameLabel, *fParamValueLabel;
+
+    // the printf-format string. 
+    std::string fFormatString={"%+.4e"}; 
 
     Key<UserSlider> fMyKey{};
 
@@ -42,11 +46,10 @@ public:
     //info needed to construct a slider
     struct SliderInfo { std::string name; double min, max; }; 
 
-    UserSlider(Key<UserApp>, const TGWindow*, UserApp* parent, UInt_t width, std::string param_name, double min, double max);
+    UserSlider(Key<UserParameterPanel>, const TGWindow*, UserParameterPanel* parent, UInt_t width, const std::string& param_name, double min, double max);
 
     // Signals (to propagate back to the kernel)
-    // signal (when the slider is moved)
-    void DoSliderMoved();
+    void DoSliderMoved(); // signal (when the slider is moved)
 
     ClassDef(UserSlider,0);
 };

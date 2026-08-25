@@ -9,7 +9,7 @@
 
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
-EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, UInt_t h, const std::vector<std::string>& window_names)
+EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, UInt_t h, const std::vector<std::string>& window_names, const std::vector<UserParameter<double>>& user_parameters)
     : TGMainFrame( gClient->GetRoot(), w, h ) 
 {
     SetCleanup(kDeepCleanup); 
@@ -40,6 +40,21 @@ EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, U
 
         AddFrame(
             fTimeControlPanel,
+            new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
+        ); 
+    }
+
+    //add user-specified parameters, if they gave us any. 
+    if (!user_parameters.empty()) {
+
+        fUserParameterPanel = new UserParameterPanel(fMyKey, this, this, fWidth); 
+
+        for (const auto& param : user_parameters) {
+            fUserParameterPanel->AddUserSlider(fMyKey, param.name, param.min, param.max); 
+        }
+
+        AddFrame(
+            fUserParameterPanel, 
             new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
         ); 
     }

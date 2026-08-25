@@ -5,6 +5,7 @@
 #include <DrawFunction.hpp>
 #include <UserWindow.hpp>
 #include <Frequency_Type.hpp>
+#include <UserParameter.hpp>
 // TGUI headers
 #include <TGFrame.h>
 #include <TGWindow.h>
@@ -44,6 +45,10 @@ class EventGUI;
 class EventGUI; 
 class TimeControlPanel;
 
+struct UserParameterInfo {
+    std::string name; 
+    double min, max; 
+};
 
 enum class ParamOperation { kSet, kGet };
 
@@ -131,6 +136,9 @@ private:
     //this variable stores the name of the current user-defined draw funciton. 
     std::string fCurrentDrawFunction{"none"}; 
 
+    //list of user sliders to add
+    std::vector<UserParameter<double>> fUserParameters{};
+
     //update the timestamp in the GUI and in each user window.
     void UpdateTimestamp();
 
@@ -172,19 +180,19 @@ public:
     /// @param name The name of the window. This must be unique; if another window with the same name has already been added, the program will exit. 
     /// @param width width of the window, in pixels.
     /// @param height height of the window, in pixels.
-    void AddUserWindow(std::string window_name, UInt_t width, UInt_t height);
+    void AddUserWindow(const std::string& window_name, UInt_t width, UInt_t height);
     
     /// @brief Add a a new object drawing function. 
     /// @param window_name name of the window to add it to. the winodow with this name must be added first! 
     /// @param object_name unique name of this drawing routine. If the window 'window_name' already has an object with the same name, the program will exit. 
     /// @param draw_frequency How often to re-run this drawing routine. Frequency::kEachEvent = call this once for every new event. Frequency::kEachTimeStep = call this each time a new event and/or time is set.
-    void AddDrawFunction(std::string window_name, std::string object_name, const std::function<void(void)>& fcn, Frequency::Type);
+    void AddDrawFunction(const std::string& window_name, std::string object_name, const std::function<void(void)>& fcn, Frequency::Type);
 
     /// @brief Add a user-defined slider, with a given min and max value
     /// @param slider_name name of the slider
     /// @param min_val minimum value
     /// @param max_val maximum value 
-    void AddUserSlider(std::string window_name, std::string slider_name, double min_val, double max_val); 
+    void AddUserSlider(const std::string& slider_name, double min_val, double max_val); 
 
     /// @brief set a user-specified parameter, globally accessible througout all other user-functions
     /// @tparam T type of param. see 'EventDisplayKernel.cpp' for valid types. 
