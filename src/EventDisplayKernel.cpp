@@ -29,6 +29,8 @@
 constexpr char classname[] = "EventDisplayKernel"; 
 #endif
 
+class UserSlider; 
+
 namespace inst_helpers {
     template<typename T> std::string GetBranchCode(); 
 }
@@ -506,7 +508,7 @@ void EventDisplayKernel::DrawCurrentEvent()
 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::DoDrawTimestamp(Key<EventGUI>, double timestamp)
+template<typename T> void EventDisplayKernel::DoDrawTimestamp(Key<T>, double timestamp)
 {
     if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
 
@@ -557,6 +559,8 @@ void EventDisplayKernel::DoDrawTimestamp(Key<EventGUI>, double timestamp)
     }
 
 }
+template void EventDisplayKernel::DoDrawTimestamp(Key<EventGUI>, double timestamp);
+template void EventDisplayKernel::DoDrawTimestamp(Key<UserSlider>, double timestamp);
 //________________________________________________________________________________________________
 void EventDisplayKernel::AddDrawFunction(std::string window_name, std::string object_name, const std::function<void(void)>& fcn,  Frequency::Type type)
 {
@@ -580,6 +584,31 @@ void EventDisplayKernel::AddDrawFunction(std::string window_name, std::string ob
 
     //now, we have our window. we can add the function. 
     my_window->AddDrawnItem(fMyKey, draw_function, type);
+}
+//________________________________________________________________________________________________
+/// @brief Add a user-defined slider, with a given min and max value
+/// @param slider_name name of the slider
+/// @param min_val minimum value
+/// @param max_val maximum value 
+void EventDisplayKernel::AddUserSlider(std::string window_name, std::string slider_name, double min_val, double max_val)
+{
+    //search through the list of window names, to find the one the user wants to add this function to. 
+    UserWindow* my_window=nullptr; 
+    for (auto& window : fUserWindows) {
+        if (window->GetName() == window_name) { my_window = window.get(); break; }
+    }
+
+    if (my_window == nullptr) {
+        Error(__func__,
+            "Cannot add drawn item '%s' to window '%s'; a window with this name could not be found in the list of added windows. Make sure:\n"
+            "   1. the name is spelled exactly as it was when the window was added, and\n"
+            "   2. this draw function is added *after* the window is.",
+            slider_name.c_str(), window_name.c_str()
+        );  
+        std::exit(1);
+    }   
+
+    my_window->AddUserSlider(fMyKey, slider_name, min_val, max_val); 
 }
 //________________________________________________________________________________________________
 void EventDisplayKernel::AddUserWindow(std::string window_name, UInt_t width, UInt_t height)
@@ -743,7 +772,88 @@ void EventDisplayKernel::AddTimeSlider(double t_min, double t_max)
     fTimestamp = (t_min + t_max)/2.;
 }
 //________________________________________________________________________________________________
+template <typename T> void EventDisplayKernel::HandleParameter(const std::string& param_name, T& val, ParamOperation operation_type)
+{
+    //check some minimum requirements about the parameter 
+    static_assert(std::is_default_constructible_v<T>); 
+
+    //list of parameters. 
+    static std::map<std::string, T> user_params; 
+
+
+
+    switch (operation_type) {
+
+
+        //we're setting a new / existing user parameter. 
+        case ParamOperation::kSet : {
+
+#ifdef DEBUG
+            Info(__func__, "setting parameter: %s", param_name.c_str()); 
+#endif
+            //this is a really nice syntax shorthand for a std::map. 
+            // basically, if the element exists in the map, it will be overwritten with this value. 
+            // if a parameter with 'param_name' doesn't exist in the map, then a new one will be added. 
+            user_params[param_name] = val; 
+            return;       
+        }
+
+        //we're trying to fetch a new parameter 
+        case ParamOperation::kGet : {
+#ifdef DEBUG
+            Info(__func__, "setting parameter: %s", param_name.c_str()); 
+#endif
+            auto find_it = user_params.find(param_name); 
+
+            //check to see if the parameter's been found
+            if (find_it == user_params.end()) {
+                Error(__func__, "Tried to fetch user-parameter '%s', but it was not found in the list!\n"
+                    "   Check spelling, param type, and that it has been set at least once before you attempt to fetch it.",
+                    param_name.c_str()
+                ); 
+                std::exit(1); 
+                return; 
+            }
+
+            //the parameter *has* been found: 
+            val = find_it->second; 
+            return; 
+        }
+
+        default : {
+            Error(__func__, "Unknown option. should not be possible to get here!");
+            std::exit(1);
+            return; 
+        }
+
+    }
+}
+//explicit template instantiations
+template void EventDisplayKernel::HandleParameter(const std::string& param_name, double& val, ParamOperation operation_type);
+template void EventDisplayKernel::HandleParameter(const std::string& param_name, int& val, ParamOperation operation_type);
+template void EventDisplayKernel::HandleParameter(const std::string& param_name, std::string& val, ParamOperation operation_type);
 //________________________________________________________________________________________________
+template <typename T> void EventDisplayKernel::SetParameter(const std::string& param_name, T val)
+{
+    //try to *set* a parameter: 
+    HandleParameter<T>(param_name, val, ParamOperation::kSet); 
+}
+//explicit template instantiations
+template void EventDisplayKernel::SetParameter(const std::string& param_name, double val);
+template void EventDisplayKernel::SetParameter(const std::string& param_name, int val);
+template void EventDisplayKernel::SetParameter(const std::string& param_name, std::string val);
+//________________________________________________________________________________________________
+template <typename T> T EventDisplayKernel::GetParameter(const std::string& param_name)
+{
+    //try to *get* a parameter: 
+    T val; 
+    HandleParameter<T>(param_name, val, ParamOperation::kGet); 
+    return val; 
+}
+//explicit template instantiations
+template double         EventDisplayKernel::GetParameter(const std::string& param_name);
+template int            EventDisplayKernel::GetParameter(const std::string& param_name);
+template std::string    EventDisplayKernel::GetParameter(const std::string& param_name);
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

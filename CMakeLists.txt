@@ -16,6 +16,7 @@ set(headers
     include/UserApp.hpp
     include/UserWindow.hpp
     include/EventGUI.hpp
+    include/UserSlider.hpp
 #    include/PrivateMessenger.hpp
 )
 
@@ -24,6 +25,7 @@ set(sources
     src/UserApp.cpp
     src/UserWindow.cpp
     src/EventGUI.cpp
+    src/UserSlider.cpp
 #   
 #   widgets
     src/widgets/EventControlPanel.cpp

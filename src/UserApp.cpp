@@ -15,7 +15,7 @@ namespace {
 #endif
 
 //__________________________________________________________________________________________________________________________
-UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_t w, UInt_t h)
+UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_t w, UInt_t h, const std::vector<UserSlider::SliderInfo>& sliders)
     : TGMainFrame(ptr, w, h), fParent{parent}
 {    
 
@@ -47,6 +47,13 @@ UserApp::UserApp(Key<UserWindow>, UserWindow* parent, const TGWindow* ptr, UInt_
         Error(__func__, "<UserWindow: %s>: In user-supplied app draw function, a TRootEmbeddedCanvas was not defined, or its ptr was not assigned correctly", window_name);
         std::exit(1);
         return; 
+    }
+
+    //now, add a new group frame
+    for (const auto& slider_info : sliders) {
+
+        auto slider = new UserSlider(fMyKey, this, this, w, slider_info.name, slider_info.min, slider_info.max); 
+        AddFrame(slider, new TGLayoutHints(kLHintsExpandX | kLHintsBottom, 2,2,2,2)); 
     }
 
     //AddFrame()

@@ -3,7 +3,8 @@
 
 #include <DrawFunction.hpp>
 #include <UserApp.hpp> 
-#include <Key.hpp> 
+#include <Key.hpp>
+#include <UserSlider.hpp> 
 #include <Frequency_Type.hpp>
 //TGUI headers
 #include <TGFrame.h>
@@ -36,6 +37,9 @@ private:
     std::vector<DrawFunction> fDrawFunctions_timestep{}; 
 
     UInt_t fWidth, fHeight; 
+
+    //user-sliders
+    std::vector<UserSlider::SliderInfo> fSliders;
 
     Frequency::Type fCurrentDrawFunctionFrequency{Frequency::Type::kEachEvent}; 
 
@@ -88,6 +92,8 @@ public:
 
     //Add a drawn object to this window. 
     void AddDrawnItem(Key<EventDisplayKernel>, DrawFunction draw_function, Frequency::Type); 
+
+    void AddUserSlider(Key<EventDisplayKernel>, std::string param_name, double min, double max); 
 
     /// @brief Activate this user window, if it's deactivated. noop if it's already active. 
     /// see implemenation for a list of valid senders. 

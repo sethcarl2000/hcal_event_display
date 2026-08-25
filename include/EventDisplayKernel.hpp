@@ -44,6 +44,9 @@ class EventGUI;
 class EventGUI; 
 class TimeControlPanel;
 
+
+enum class ParamOperation { kSet, kGet };
+
 //implementing this class as a meyer's singleton 
 class EventDisplayKernel {
 public: 
@@ -131,6 +134,10 @@ private:
     //update the timestamp in the GUI and in each user window.
     void UpdateTimestamp();
 
+    //
+    // handle a user-parameter operation (either setting or getting). 
+    template <typename T> void HandleParameter(const std::string& param, T& val, ParamOperation operation_type); 
+
 public: 
 
     //delete copy constructor & copy assign. operator 
@@ -173,6 +180,25 @@ public:
     /// @param draw_frequency How often to re-run this drawing routine. Frequency::kEachEvent = call this once for every new event. Frequency::kEachTimeStep = call this each time a new event and/or time is set.
     void AddDrawFunction(std::string window_name, std::string object_name, const std::function<void(void)>& fcn, Frequency::Type);
 
+    /// @brief Add a user-defined slider, with a given min and max value
+    /// @param slider_name name of the slider
+    /// @param min_val minimum value
+    /// @param max_val maximum value 
+    void AddUserSlider(std::string window_name, std::string slider_name, double min_val, double max_val); 
+
+    /// @brief set a user-specified parameter, globally accessible througout all other user-functions
+    /// @tparam T type of param. see 'EventDisplayKernel.cpp' for valid types. 
+    /// @param param_name unique name of the parameter. 
+    /// @param val value of the parameter to set. 
+    template <typename T> void SetParameter(const std::string& param_name, T val);
+
+    /// @brief Fetch a user-specified parameter. 
+    /// @tparam T type of the parameter 
+    /// @param param_name unique name of the parameter
+    /// @return current value of the parameter. 
+    template <typename T> T GetParameter(const std::string& param_name);
+
+
     //Launch interactive app 
     void LaunchApp();
 
@@ -204,7 +230,7 @@ public:
     void DoNextEvent(Key<EventGUI>); 
     void DoPrevEvent(Key<EventGUI>);  
     void CloseApp(Key<EventGUI>);
-    void DoDrawTimestamp(Key<EventGUI>, double timestamp);
+    template<typename T> void DoDrawTimestamp(Key<T>, double timestamp);
     void DoToggleWindow(Key<EventGUI>, std::string window_name, bool is_active);
 
     void DoSetTimestamp(Key<TimeControlPanel>, double timestamp);

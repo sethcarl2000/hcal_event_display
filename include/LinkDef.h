@@ -8,5 +8,6 @@
 #pragma link C++ class EventControlPanel+; 
 #pragma link C++ class ToggleWindowsPanel+; 
 #pragma link C++ class TimeControlPanel+;
+#pragma link C++ class UserSlider+; 
 
 #endif 

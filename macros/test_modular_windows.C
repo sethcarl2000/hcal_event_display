@@ -53,6 +53,9 @@ void test_modular_windows()
     //
     kernel.AddUserWindow("hcal", 500, 800);
 
+    //kernel.AddUserSlider("time", "time_cut", 0, 50); 
+    kernel.SetParameter<double>("time_cut", 10.); 
+
     // Now, we have to add draw funcitons to the window. make sure the name of the window (1st arg) matches! 
     // This first function is just a 'frame', meaning 
     kernel.AddDrawFunction("hcal", "frame", draw_hcal_frame, Frequency::Type::kEachEvent);
@@ -60,6 +63,7 @@ void test_modular_windows()
     // Now, we add the 'goodblocks' variables (their energies). 
     kernel.AddDrawFunction("hcal", "goodblock_e", draw_goodblock_energy, Frequency::Type::kEachTimeStep);
 
+    kernel.AddUserSlider("hcal", "time_cut", 0, 50); 
 
     // tell the kernel we want a 'time slider', and also specify what we want the time-range to be. 
     kernel.AddTimeSlider(-100, +150.); 
@@ -72,7 +76,6 @@ void test_modular_windows()
     // Next, we add the time of each blocks arrival to the window. 
     kernel.AddDrawFunction("time", "goodblock_atime", draw_time_hist, Frequency::Type::kEachTimeStep);
     
-
 
     // tell the kernel about the ROOT file we want to look at. 
     kernel.SetFile("e1209016_fullreplay_3013_stream0_2_seg1_1.root");
@@ -108,7 +111,9 @@ void draw_goodblock_energy()
 
     //get our data for this event
     
-    const double time_cut = timing_window_size/2.; // +/- this value, blocks are kept (ns) 
+    double time_cut = kernel.GetParameter<double>("time_cut"); 
+
+    //const double time_cut = timing_window_size/2.; // +/- this value, blocks are kept (ns) 
 
     //get the current-selected time. 
     double timestamp = kernel.GetTimestamp();
@@ -120,6 +125,7 @@ void draw_goodblock_energy()
     br_array<double> blocks_row     = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.row");
     br_array<double> blocks_col     = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.col");   
     br_array<double> blocks_time    = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.atime");
+
 
     //now, loop over all of them, and draw a 'box' for each block
 
@@ -205,15 +211,17 @@ void draw_time_hist()
     const br_array<double>& blocks_time = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.atime");
     const br_array<double>& blocks_e    = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.e");
 
-    for (size_t i=0; i<blocks_time.size(); i++) { hist->Fill(blocks_time[i], 100.*blocks_e[i]); }
+    for (size_t i=0; i<blocks_time.size(); i++) { hist->Fill(blocks_time[i], 1000.*blocks_e[i]); }
 
     kernel.Draw(hist, "HIST");
 
     if (kernel.GetAppState() != EventDisplayKernel::AppState::kActive) return;
 
+    double time_cut = kernel.GetParameter<double>("time_cut"); 
+
     double max = hist->GetMaximum(); 
     double timestamp = kernel.GetTimestamp();
-    auto box = new TBox(timestamp-timing_window_size/2., 0., timestamp+timing_window_size/2., max);
+    auto box = new TBox(timestamp - time_cut, 0., timestamp + time_cut, max);
     box->SetFillColor(kRed);
     box->SetFillStyle(3004);
     kernel.Draw(box);

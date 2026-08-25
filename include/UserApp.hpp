@@ -3,6 +3,7 @@
 
 #include <DrawFunction.hpp>
 #include <Key.hpp>
+#include <UserSlider.hpp>
 //TGUI headers
 #include <TGFrame.h>
 #include <TRootEmbeddedCanvas.h> 
@@ -33,7 +34,8 @@ public:
         Key<UserWindow>,
         UserWindow* parent, 
         const TGWindow* ptr, 
-        UInt_t w, UInt_t h
+        UInt_t w, UInt_t h, 
+        const std::vector<UserSlider::SliderInfo>& sliders 
     );
 
     ~UserApp();     
