@@ -94,7 +94,11 @@ private:
     //the 'event index', which starts from '0' and goes in order until 'n_events-1'.  
     size_t fEventIndex; 
     UInt_t fEventNumber;
+
+    //timestamp of the slider. 
     double fTimestamp{0.};  
+    double fMinTimestamp{0.}, fMaxTimestamp{0.}; 
+    bool fIsTimeSliderActive{false}; 
 
     ROOT::VecOps::RVec<UInt_t> fEventNumbers; 
 
@@ -147,6 +151,15 @@ public:
 
     // set the tree name
     void SetTreeName(std::string tree_name) { fTreeName=tree_name; }; 
+
+    /// @brief Add a 'time slider' to interactively set the timestamp. 
+    /// @param t_min min timestamp of the slider (left)
+    /// @param t_max max timestamp of the slider (right)
+    void AddTimeSlider(double t_min, double t_max); 
+
+    bool IsTimeSliderActive() const { return fIsTimeSliderActive; }
+    double GetMinTimestamp() const { return fMinTimestamp; }
+    double GetMaxTimestamp() const { return fMaxTimestamp; }
 
     /// @brief Add a new user window
     /// @param name The name of the window. This must be unique; if another window with the same name has already been added, the program will exit. 

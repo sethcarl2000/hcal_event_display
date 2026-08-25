@@ -14,6 +14,8 @@ EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, U
 {
     SetCleanup(kDeepCleanup); 
 
+    auto& kernel = EventDisplayKernel::Instance(); 
+
     // Add the event control panel
     fEventControlPanel = new EventControlPanel(fMyKey, this, this, 500);
     AddFrame(
@@ -28,12 +30,19 @@ EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, U
         new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
     ); 
     
-    // Add the user window control panel
-    fTimeControlPanel = new TimeControlPanel(fMyKey, this, this, 500);
-    AddFrame(
-        fTimeControlPanel,
-        new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
-    ); 
+    if (kernel.IsTimeSliderActive()) {
+        
+        // Add the user window control panel
+        fTimeControlPanel = new TimeControlPanel(fMyKey, this, this, 500);
+
+        // set the user-specified time-range 
+        fTimeControlPanel->SetTimeRange( kernel.GetMinTimestamp(), kernel.GetMaxTimestamp() ); 
+
+        AddFrame(
+            fTimeControlPanel,
+            new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
+        ); 
+    }
 
     SetWindowName("Event Display controls");
     MapSubwindows();
@@ -71,7 +80,6 @@ void EventGUI::SetEventIndex(size_t index)
 {
     EventDisplayKernel::Instance().SetEventIndex(fMyKey, index);
 }
-//________________________________________________________________________________________________
 //________________________________________________________________________________________________
 void EventGUI::DoToggleWindow(const std::string& window_name, bool do_activate) 
 {

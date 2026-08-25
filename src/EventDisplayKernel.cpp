@@ -712,8 +712,15 @@ void EventDisplayKernel::UpdateTimestamp()
     if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
 
     //inform the GUI about the updated timestamp
-    if (fGUI) fGUI->GetTimeControlPanel()->SetTimestamp(fMyKey, fTimestamp);
-
+    if (fGUI && fIsTimeSliderActive) {
+        if (auto time_control = fGUI->GetTimeControlPanel(); time_control != nullptr) {
+            time_control->SetTimestamp(fMyKey, fTimestamp);
+        } else {
+            Error(__func__, "Time control panel should be active, but it's null!"); 
+            std::exit(1); 
+            return; 
+        }
+    }
     //inform each window about the updated timestamp
     for (auto& user_window : fUserWindows) {
         if (user_window->IsActive()) {
@@ -722,6 +729,19 @@ void EventDisplayKernel::UpdateTimestamp()
     }
 }
 //________________________________________________________________________________________________
+void EventDisplayKernel::AddTimeSlider(double t_min, double t_max)
+{
+    fMinTimestamp = t_min; 
+    fMaxTimestamp = t_max; 
+
+    if (fMinTimestamp >= fMaxTimestamp) {
+        Error(__func__, "minimum time >= maxmimum time (%f >= %f)", t_min, t_max); 
+        std::exit(1); 
+        return; 
+    }
+    fIsTimeSliderActive = true; 
+    fTimestamp = (t_min + t_max)/2.;
+}
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

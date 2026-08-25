@@ -39,6 +39,7 @@ class EventGUI : public TGMainFrame {
     //TGTextButton *fGButton_next, *fGButton_prev; 
     //TGLabel *fGLabel_eventNumber; 
 
+    bool fIsTimeSliderActive; 
 
 
 public: 
@@ -176,6 +177,8 @@ public:
     // Signals (to propagate back to the kernel)
     // signal (when the slider is moved)
     void DoSliderMoved();
+
+    void SetTimeRange(double t_min, double t_max) { fMinTimestamp=t_min; fMaxTimestamp=t_max; } 
 
     void SetTimestamp(Key<EventDisplayKernel>, double timestamp); 
 
