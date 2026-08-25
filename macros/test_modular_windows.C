@@ -46,15 +46,20 @@ void test_modular_windows()
     // get access to the kernel
     auto& kernel = EventDisplayKernel::Instance(); 
 
+    //let's add some user-sliders. this will let us interactivley change parameters on the fly. 
+    
+    // this is the size of our time-cut window. 
+    kernel.AddUserSlider("time_cut", 0, 50); 
+
+    // this is the maxmum energy of a block to draw (higher-energy blocks will just be a full box)!
+    kernel.AddUserSlider("max_energy_MeV", 0., 1000.);
+
     // Here, we add our first window. let's call it 'hcal'. it will be a 2d display of all hcal blocks. 
     //
     // Fist, we call 'AddUserWindow' to add the window itself. 
     // this will be its own separate frame, which we can draw / hide at will. 
     //
     kernel.AddUserWindow("hcal", 500, 800);
-
-    //kernel.AddUserSlider("time", "time_cut", 0, 50); 
-    kernel.SetParameter<double>("time_cut", 10.); 
 
     // Now, we have to add draw funcitons to the window. make sure the name of the window (1st arg) matches! 
     // This first function is just a 'frame', meaning 
@@ -63,7 +68,6 @@ void test_modular_windows()
     // Now, we add the 'goodblocks' variables (their energies). 
     kernel.AddDrawFunction("hcal", "goodblock_e", draw_goodblock_energy, Frequency::Type::kEachTimeStep);
 
-    kernel.AddUserSlider("hcal", "time_cut", 0, 50); 
 
     // tell the kernel we want a 'time slider', and also specify what we want the time-range to be. 
     kernel.AddTimeSlider(-100, +150.); 
@@ -131,7 +135,7 @@ void draw_goodblock_energy()
 
     int n_blocks = blocks_e.size(); 
 
-    double max_energy = 0.05; //GEV
+    double max_energy = kernel.GetParameter<double>("max_energy_MeV"); 
     double min_energy = 0.00; 
 
     for (int i=0; i<n_blocks; i++) {
@@ -144,7 +148,7 @@ void draw_goodblock_energy()
         double col = blocks_col[i];
 
         // get the energy of this block 
-        double energy = blocks_e[i]; 
+        double energy = blocks_e[i] * 1000.; // x 1e3 to convert from GeV to MeV
 
         // energy normalized in the range 0-1
         double norm_energy = (energy - min_energy)/(max_energy - min_energy); 
