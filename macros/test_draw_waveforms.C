@@ -63,6 +63,9 @@ void test_draw_waveforms()
 
     kernel.AddDrawFunction("time", "goodblock_atime", draw_time_hist, Frequency::Type::kEachTimeStep);
     
+    // tell the kernel we want a 'time slider', and also specify what we want the time-range to be. 
+    kernel.AddTimeSlider(0., 50.); 
+
     // tell the kernel about the ROOT file we want to look at
     kernel.SetFile("data/e1209016_replayed_2034_stream0_2_seg0_0_firstevent0_nevent10000.root"); 
     kernel.SetTreeName("T"); 

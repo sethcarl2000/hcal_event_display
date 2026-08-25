@@ -26,42 +26,64 @@ Color_t GetGreyscale(double val);
 
 template<typename T> using br_array = ROOT::VecOps::RVec<T>; 
 
+// *** see below for implementations of each of these functions *** 
+//
+// Technical note: it's also OK to pass a lambda fcn to the kernel as your draw function. 
+// anything that can be converted to a std::function<void(void)> type is allowed. 
+
 //draw energy of goodblocks
 void draw_goodblock_energy();
 
 //draw hcal frame
 void draw_hcal_frame();
 
-//___________________________________________________________________________________________________________
-//___________________________________________________________________________________________________________
-//___________________________________________________________________________________________________________
-//___________________________________________________________________________________________________________
-//___________________________________________________________________________________________________________
+//draw time / amplitude of each goodblock hit 
 void draw_time_hist();
+
 //___________________________________________________________________________________________________________
 void test_modular_windows()
 {
     // get access to the kernel
     auto& kernel = EventDisplayKernel::Instance(); 
 
-    // add our first user window (hcal)
+    // Here, we add our first window. let's call it 'hcal'. it will be a 2d display of all hcal blocks. 
+    //
+    // Fist, we call 'AddUserWindow' to add the window itself. 
+    // this will be its own separate frame, which we can draw / hide at will. 
+    //
     kernel.AddUserWindow("hcal", 500, 800);
 
-    // add our first drawn item
+    // Now, we have to add draw funcitons to the window. make sure the name of the window (1st arg) matches! 
+    // This first function is just a 'frame', meaning 
     kernel.AddDrawFunction("hcal", "frame", draw_hcal_frame, Frequency::Type::kEachEvent);
 
+    // Now, we add the 'goodblocks' variables (their energies). 
     kernel.AddDrawFunction("hcal", "goodblock_e", draw_goodblock_energy, Frequency::Type::kEachTimeStep);
 
-    // Add the 'kernel time hist' 
+
+    // tell the kernel we want a 'time slider', and also specify what we want the time-range to be. 
+    kernel.AddTimeSlider(-100, +150.); 
+
+    // Now, we add our second window. We will call this 'time' as it will show the times / amplitudes of all the 'goodblocks' in our event. 
+    //
+    //
     kernel.AddUserWindow("time", 900, 400);
 
+    // Next, we add the time of each blocks arrival to the window. 
     kernel.AddDrawFunction("time", "goodblock_atime", draw_time_hist, Frequency::Type::kEachTimeStep);
     
-    // tell the kernel about the ROOT file we want to look at
-    kernel.SetFile("e1209016_fullreplay_3013_stream0_2_seg1_1.root"); 
+
+
+    // tell the kernel about the ROOT file we want to look at. 
+    kernel.SetFile("e1209016_fullreplay_3013_stream0_2_seg1_1.root");
+
+    // tell the kernel the name of the TTree within the file to find.  
     kernel.SetTreeName("T"); 
 
-    // launch the interactive app 
+
+
+    // launch the interactive app. 
+    // Any commands in this macro after this one will be ignored!  
     kernel.LaunchApp(); 
 }
 
@@ -118,22 +140,32 @@ void draw_goodblock_energy()
         // get the energy of this block 
         double energy = blocks_e[i]; 
 
-        auto block = new TBox(
-            col-0.5,row-0.5,    //x1,y1
-            col+0.5,row+0.5     //x2,y2
-        ); 
-
-        // Draw the frame for each block that's part of 'goodblocks'
-
-        
         // energy normalized in the range 0-1
         double norm_energy = (energy - min_energy)/(max_energy - min_energy); 
         if (norm_energy > 1.) norm_energy =1.;
         if (norm_energy < 0.) norm_energy =0.; 
 
+
+        // the way a TBox is drawn is as follows: 
+        /*
+        *       -------------(x2,y2)
+        *       |               |
+        *       |               |
+        *       |               |
+        *       |               |
+        *    (x1,y1)------------- 
+        * 
+        */
+        auto block = new TBox(
+            col-norm_energy/2., row-norm_energy/2.,    //x1,y1
+            col+norm_energy/2., row+norm_energy/2.     //x2,y2
+        ); 
+
+        // Draw the frame for each block that's part of 'goodblocks'
+        
         auto color = GetGreyscale(norm_energy); 
         // set the transparency of the block according to the energy 
-        block->SetFillColor(color);
+        block->SetFillColor(kBlack);
         block->SetLineColor(kBlack); 
 
         
@@ -150,10 +182,10 @@ void draw_goodblock_energy()
             col+0.5,row+0.5     //x2,y2
         ); 
 
-        block_frame->SetFillColor(kBlack);
-        block_frame->SetFillStyle(3004);
+        block_frame->SetFillStyle(0);
         block_frame->SetLineColor(kBlack); 
-        block_frame->SetLineWidth(1); 
+        block_frame->SetLineWidth(1);
+        block_frame->SetLineStyle(kDashed);  
         kernel.Draw(block_frame, "SAME");
 
     }
@@ -161,8 +193,13 @@ void draw_goodblock_energy()
 //___________________________________________________________________________________________________________
 void draw_time_hist()
 {
-    auto hist = new TH1D("h_time", "H.Cal 'goodblocks' time;block time (ns);block energy (MeV)", 50, -100., +150.);
     auto& kernel = EventDisplayKernel::Instance();
+
+    auto hist = new TH1D("h_time", "H.Cal 'goodblocks' time;block time (ns);block energy (MeV)", 
+        100, //number of bins  
+        kernel.GetMinTimestamp(), //min timestamp  
+        kernel.GetMaxTimestamp()  //max timestamp 
+    );
     //kernel.Draw(hist, "HIST");
 
     const br_array<double>& blocks_time = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.atime");
@@ -180,11 +217,14 @@ void draw_time_hist()
     box->SetFillColor(kRed);
     box->SetFillStyle(3004);
     kernel.Draw(box);
+
+
+    auto coinc_line = new TLine(kernel.GetTimestamp(), 0., kernel.GetTimestamp(), hist->GetMaximum());
+    coinc_line->SetLineColor(kRed); 
+    kernel.Draw(coinc_line);
+
     return;
     
-    /*auto coinc_line = new TLine(kernel.GetTimestamp(), 0., kernel.GetTimestamp(), hist->GetMaximum());
-    coinc_line->SetLineColor(kRed); 
-    kernel.Draw(coinc_line);*/ 
 }
 //___________________________________________________________________________________________________________
 Color_t GetGreyscale(double val) {
