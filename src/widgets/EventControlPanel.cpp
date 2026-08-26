@@ -9,6 +9,7 @@
 EventControlPanel::EventControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGUI* parent, UInt_t width)
     : TGGroupFrame(ptr, "Event Controls", kVerticalFrame), fParent{parent}, fRand{}
 {
+    auto& kernel = EventDisplayKernel::Instance(); 
 
     ///////////////////////////////////////////////////////////////
     //
@@ -31,18 +32,11 @@ EventControlPanel::EventControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGU
     button_rand_event->Connect("Clicked()", "EventControlPanel", this, "DoRandomEvent()"); 
     frame_buttons->AddFrame(button_rand_event, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 20, 10, 5, 5)); 
 
+    //event label
+    fEventLabel = new TGLabel(frame_buttons, "Event: none");
+    frame_buttons->AddFrame(fEventLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY | kLHintsExpandX, 20, 10, 5, 5)); 
+
     AddFrame(frame_buttons, new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5));
-
-
-    ///////////////////////////////////////////////////////////////
-    //
-    //  This is the event information frame
-    //
-    auto frame_info = new TGHorizontalFrame(this, width, 50);
-
-    fEventLabel = new TGLabel(frame_info, "Event: none              :");
-    frame_info->AddFrame(fEventLabel, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5,5,5,5)); 
-    AddFrame(frame_info, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 5,5,5,5));
 
 
     ///////////////////////////////////////////////////////////////
@@ -53,8 +47,8 @@ EventControlPanel::EventControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGU
 
     fSlider = new TGHSlider(frame_slider, width);
     fSlider->Connect("Released()", "EventControlPanel", this, "DoSliderReleased()");
-    frame_slider->AddFrame(fSlider, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY, 5,5,5,5)); 
-    AddFrame(frame_slider, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 5,5,5,5));
+    frame_slider->AddFrame(fSlider, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY | kLHintsExpandX, 5,5,5,5)); 
+    AddFrame(frame_slider, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5,5,5,5));
 
 }
 //________________________________________________________________________________________________

@@ -417,6 +417,15 @@ void EventDisplayKernel::LaunchGUI()
     for (const auto& window : fUserWindows) window_names.emplace_back(window->GetName());
 
     fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names, fUserParameters);
+
+    if (auto time_panel = fGUI->GetTimeControlPanel(); time_panel != nullptr) {
+
+        time_panel->SetTimestamp(fMyKey, fTimestamp); 
+    } else {
+        Error(__func__, "time panel is null!"); 
+        std::exit(1); 
+        return; 
+    }
 }
 
 //________________________________________________________________________________________________

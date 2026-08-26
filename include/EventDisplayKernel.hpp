@@ -110,7 +110,6 @@ private:
 
     ROOT::VecOps::RVec<UInt_t> fEventNumbers; 
 
-    size_t GetEventIndex() const { return fEventIndex; } 
 
     //Launches GUI 
     void LaunchGUI();
@@ -225,6 +224,7 @@ public:
 
     //the 'event number', as it appears in the rootfile
     UInt_t GetEventNumber() const { return fEventNumber; } 
+    size_t GetEventIndex() const { return fEventIndex; } 
 
     UInt_t GetEventNumber(size_t index); 
 

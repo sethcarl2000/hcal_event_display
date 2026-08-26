@@ -8,7 +8,7 @@
 
 //________________________________________________________________________________________________
 UserParameterPanel::UserParameterPanel(Key<EventGUI>, const TGWindow* ptr, EventGUI* parent, UInt_t width)
-    : TGGroupFrame(ptr, "Time Controls", kVerticalFrame), fParent{parent}, fWidth{width}
+    : TGGroupFrame(ptr, "User Parameters", kVerticalFrame), fParent{parent}, fWidth{width}
 {
     //this constructor is unique; we don't add any sliders! 
 }

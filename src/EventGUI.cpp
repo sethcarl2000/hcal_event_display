@@ -22,13 +22,15 @@ EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, U
         fEventControlPanel,
         new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
     );
+    //set the starting event 
+    fEventControlPanel->NewEventIndex(fMyKey, kernel.GetEventIndex()); 
 
     // Add the user window control panel
     fToggleWindowsPanel = new ToggleWindowsPanel(fMyKey, this, this, window_names);
     AddFrame(
         fToggleWindowsPanel,
         new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
-    ); 
+    );
     
     if (kernel.IsTimeSliderActive()) {
         
