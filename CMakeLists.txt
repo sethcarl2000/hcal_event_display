@@ -45,7 +45,7 @@ target_link_libraries(EventDisplay PUBLIC ROOT::Core ROOT::RIO ROOT::Physics)
 #    LINKDEF include/LinkDef.h 
 #)
 
-option(DEBUG "Enable GUI debug printing" ON)
+option(DEBUG "Enable GUI debug printing" OFF)
 if (DEBUG)
     target_compile_definitions(EventDisplay PRIVATE DEBUG)
 endif()
