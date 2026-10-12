@@ -44,6 +44,7 @@ class EventGUI;
 
 class EventGUI; 
 class TimeControlPanel;
+class TAxis; 
 
 struct UserParameterInfo {
     std::string name; 
@@ -205,6 +206,8 @@ public:
     /// @return current value of the parameter. 
     template <typename T> T GetParameter(const std::string& param_name);
 
+    /// @return 'true' if kernel is in the 'active' state
+    bool IsActive() const { return fAppState == AppState::kActive; }
 
     //Launch interactive app 
     void LaunchApp();
