@@ -54,6 +54,8 @@ void test_modular_windows()
     // this is the maxmum energy of a block to draw (higher-energy blocks will just be a full box)!
     kernel.AddUserSlider("max_energy_MeV", 0., 1000.);
 
+
+
     // Here, we add our first window. let's call it 'hcal'. it will be a 2d display of all hcal blocks. 
     //
     // Fist, we call 'AddUserWindow' to add the window itself. 
@@ -205,7 +207,7 @@ void draw_time_hist()
 {
     auto& kernel = EventDisplayKernel::Instance();
 
-    auto hist = new TH1D("h_time", "H.Cal 'goodblocks' time;block time (ns);block energy (MeV)", 
+    auto hist = new TH1D("h_time", "H.Cal 'goodblocks' time;block time (ns);n. hits", 
         100, //number of bins  
         kernel.GetMinTimestamp(), //min timestamp  
         kernel.GetMaxTimestamp()  //max timestamp 
@@ -215,7 +217,7 @@ void draw_time_hist()
     const br_array<double>& blocks_time = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.atime");
     const br_array<double>& blocks_e    = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.e");
 
-    for (size_t i=0; i<blocks_time.size(); i++) { hist->Fill(blocks_time[i], 1000.*blocks_e[i]); }
+    for (size_t i=0; i<blocks_time.size(); i++) { hist->Fill(blocks_time[i] /*, 1000.*blocks_e[i]*/); }
 
     kernel.Draw(hist, "HIST");
 
