@@ -18,7 +18,6 @@ set(headers
     include/EventGUI.hpp
     include/UserSlider.hpp
     include/UserParameter.hpp
-#    include/PrivateMessenger.hpp
 )
 
 set(sources
@@ -35,15 +34,22 @@ set(sources
     src/widgets/UserParameterPanel.cpp
 )
 
+# be explicit about the directory in which to put the '.so' shared library file
+#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
+
 add_library(EventDisplay SHARED ${sources} ${headers})
-target_include_directories(EventDisplay PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_include_directories(EventDisplay PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(EventDisplay PUBLIC ROOT::Core ROOT::RIO ROOT::Physics)
 
-# root_generate_dictionary(
-#    G__EventDisplay ${headers} 
-#    MODULE EventDisplay
-#    LINKDEF include/LinkDef.h 
-#)
+# automatically generate the 'set_edisp_env.sh' script
+set(EDISP_ENV_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/include")
+set(EDISP_ENV_BUILD_PATH "${PROJECT_BINARY_DIR}")
+
+configure_file(
+    "${PROJECT_SOURCE_DIR}/cmake/set_edisp_env.sh.in" # input template 
+    "${PROJECT_BINARY_DIR}/set_edisp_env.sh" # output script, with hard-coded paths
+    @ONLY # only find-and-replace variables with the @VAR@ syntax 
+)
 
 option(DEBUG "Enable GUI debug printing" OFF)
 if (DEBUG)
