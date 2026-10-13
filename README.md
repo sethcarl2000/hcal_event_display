@@ -5,42 +5,42 @@ I probably need to change the name from 'hcal_event_display', considering that t
 I will try to keep the 'main' branch clean & stable, but feel free to checkout the other 'feature' branches, where I will be experimenting with additional features (although most are merged with 'main' now). 
 
 
-## Compile Instructions
+## Compile / Download Instructions
 
  > [!NOTE]
  > I develop using the `bash` terminal, so I am going to write these instructions assuming your are using `bash`, as well. Bear in mind, however, that Jefferson lab's `ifarm` ssh terminal does **not** use bash by default (it uses `tsch`). So, if you want to follow these instructions verbatim to compile this project over an `ifarm` ssh connection, just enter the command `bash` in the terminal window to open a bash terminal.
 
-To compile, you just need a working version of ROOT 6. I have been building the project using ROOT 6.20, but I don't anticipate that a newer version of ROOT 6.xx would break functionality (don't quote me on that, though). 
-You also will need to use `cmake` (minimum version: 3.16) 
 
-I develop in a [conda](https://github.com/conda/conda) environment, but any other configuration of ROOT which cmake's package handler can find _should_ work OK. 
-1. First, compile the project. To do this, navigate to the root directory of this repo, and execute:
-   ```bash
-   cmake -B build -S .
-   ```
-   
-    > If you want to try to modify the compiled code yourself, it may be useful to enable verbose debug printing. to do this, replace the above command with `cmake -DDEBUG=ON -B build -S .`
-   
-   This will create a new directory called `build` where the shared library will go.
+### Quick start: 
+If you want to get started right away, the following series of commands (one command per line) will download a copy of all necessary code, compile it, and let ROOT know where to find the code it needs to use it in your ROOT macros: 
+```bash
+cd /directory/to/place/download
+git clone https://github.com/sethcarl2000/hcal_event_display.git
+cd hcal_event_display
+cmake -B build -S .
+cmake --build build -j
+source build/set_edisp_env.sh
+```
+### Telling ROOT where to find the EDK source code
+The EventDisplayKernel (EDK) is designed to be used within cling-compiled ROOT macros (i.e., `vis_data.C`, executed on the command line via `root -l vis_data.C`). 
+To use it in this way, you must tell root where the _headers_ and the _shared library_ for the EDK are located.
+Both of these are accomplished by running the following command once each time you launch a new terminal: 
+```bash
+source build/set_edisp_env.sh
+```
+If you want to have the EDK library loaded each time you launch a new bash terminal, just execute: 
+```bash
+cat build/set_edisp_env.sh >> ~/.bashrc
+source ~/.bashrc
+```
+Make sure you only execute this command once. This copies the commands from `set_edisp_env.sh` into your `.bashrc` login script (and runs it). So, each time you log in, the libraries for the EDK are loaded. 
+### Using the EDK in your own macros
+Once you have `source`'d the `set_edisp_env.sh` script, you just need to add the EDK header to your macro: 
 
-2. Then call:
-   ```bash
-   cmake --build build -j 4 
-   ```
-   This will compile the project. The `-j 4` option specifies that 4 CPU threads will be used to compile the project concurrently; omit this option if you only want to use 1 thread at a time.
-   
-3. Finally, you must set the environment. Just call:
-   ```bash
-   source setenv.sh
-   ```
-   This script appends the path to this project's `build` directory to the user's `LD_LIBRARY_PATH` (so ROOT can find the project's shared library), and appends the `include` directory to the user's `ROOT_INCLUDE_PATH` (so ROOT can find the project's headers).
+```c++
+// in your macro, 'vis_data.C'
 
-4. Now, any macro using the Event Display can be invoked as an ordinary ROOT macro:
-
-   ```bash
-   root -l my_macro.C
-   ```
-   Or, just as well with the Analyzer:
-   ```bash
-   analyzer -l my_macro.C
-   ``` 
+#include <EventDisplayKernel.hpp>
+// ... other ROOT headers
+// ...
+```
