@@ -29,10 +29,10 @@ Both of these are accomplished by running the following command once each time y
 source build/set_edisp_env.sh
 ```
 If you want to have the EDK library loaded each time you launch a new bash terminal, Look for the following output when running the `cmake -B build -S .` command:  
-```bash
+```
 NOTE: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  For bash, if you want to have the EDK set up each time you login,
- copy-and-paste the following line at the end of your `~/.bashrc` script:
+ copy the following line, and paste it at the end of your `~/.bashrc` script:
 
    [ -f "/my/folder/hcal_event_display/build/set_edisp_env.sh" ] && source /my/folder/hcal_event_display/build/set_edisp_env.sh"
 
