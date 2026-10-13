@@ -6,8 +6,14 @@
 
 //basic struct containing information on a user parameter 
 template <typename T> struct UserParameter {
+    
     std::string name; 
+    
     T min, max; 
+
+    int n_steps; 
+
+    std::string format; 
 
     //return value of 'T' bounded to the given range 
     T clamp(const T& val) {

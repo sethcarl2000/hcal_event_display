@@ -6,6 +6,7 @@
 #include <UserWindow.hpp>
 #include <Frequency_Type.hpp>
 #include <UserParameter.hpp>
+#include <UserSlider.hpp>
 // TGUI headers
 #include <TGFrame.h>
 #include <TGWindow.h>
@@ -192,7 +193,7 @@ public:
     /// @param slider_name name of the slider
     /// @param min_val minimum value
     /// @param max_val maximum value 
-    void AddUserSlider(const std::string& slider_name, double min_val, double max_val); 
+    void AddUserSlider(const std::string& slider_name, double min_val, double max_val, int n_steps=1000, std::string format="%.4e"); 
 
     /// @brief set a user-specified parameter, globally accessible througout all other user-functions
     /// @tparam T type of param. see 'EventDisplayKernel.cpp' for valid types. 

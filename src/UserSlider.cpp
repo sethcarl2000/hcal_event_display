@@ -3,20 +3,18 @@
 #include <EventGUI.hpp>
 
 //____________________________________________________________________________________________________________
-UserSlider::UserSlider(Key<UserParameterPanel>, const TGWindow* ptr, UserParameterPanel* parent, UInt_t width, const std::string& param_name, double min, double max)
-    : TGHorizontalFrame(ptr, width), 
-    fParamName{param_name}, 
-    fMinVal{min}, fMaxVal{max}
+UserSlider::UserSlider(Key<UserParameterPanel>, const TGWindow* ptr, UserParameterPanel* parent, UInt_t width, Info info)
+    : TGHorizontalFrame(ptr, width), fInfo{info}
 {
     //label representing the name of the parameter
-    fParamNameLabel = new TGLabel(this, param_name.c_str()); 
+    fParamNameLabel = new TGLabel(this, fInfo.name.c_str()); 
     AddFrame(
         fParamNameLabel, 
         new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 5,5,5,5)
     );
 
     //label represeting the value of the parameter 
-    fParamValueLabel = new TGLabel(this, Form(fFormatString.c_str(), (min+max)/2.)); 
+    fParamValueLabel = new TGLabel(this, Form(fInfo.format.c_str(), (fInfo.min + fInfo.max)/2.)); 
     AddFrame(
         fParamValueLabel, 
         new TGLayoutHints(kLHintsRight | kLHintsCenterY, 5,5,5,5)
@@ -24,6 +22,7 @@ UserSlider::UserSlider(Key<UserParameterPanel>, const TGWindow* ptr, UserParamet
 
     // now, we add the actual slider
     fSlider = new TGHSlider(this, width);
+    fSlider->SetRange(0, fInfo.n_steps-1); 
     fSlider->Connect("PositionChanged(Int_t)", "UserSlider", this, "DoSliderMoved()");
     AddFrame(
         fSlider, 
@@ -37,7 +36,7 @@ void UserSlider::DoSliderMoved()
     double slider_pos = (double)(fSlider->GetPosition() - fSlider->GetMinPosition()); 
     slider_pos = slider_pos / ((double)(fSlider->GetMaxPosition() - fSlider->GetMinPosition()));
 
-    double val = fMinVal + slider_pos*(fMaxVal - fMinVal);
+    double val = fInfo.min + slider_pos*(fInfo.max - fInfo.min);
 
     auto& kernel = EventDisplayKernel::Instance(); 
 
@@ -51,7 +50,7 @@ void UserSlider::DoSliderMoved()
 
     kernel.DoDrawTimestamp(fMyKey, kernel.GetTimestamp()); 
     
-    fParamValueLabel->SetText(Form(fFormatString.c_str(), val)); 
+    fParamValueLabel->SetText(Form(fInfo.format.c_str(), val)); 
 }
 //____________________________________________________________________________________________________________
 //____________________________________________________________________________________________________________

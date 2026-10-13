@@ -208,7 +208,7 @@ public:
     void DoSliderMoved();
 
     //add a user-defined slider
-    void AddUserSlider(Key<EventGUI>, const std::string& param_name, double min, double max); 
+    void AddUserSlider(Key<EventGUI>, const std::string& param_name, double min, double max, int n_steps, std::string format); 
 
     ClassDef(UserParameterPanel,0);
 };

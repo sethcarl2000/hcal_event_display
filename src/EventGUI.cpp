@@ -52,7 +52,13 @@ EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, U
         fUserParameterPanel = new UserParameterPanel(fMyKey, this, this, fWidth); 
 
         for (const auto& param : user_parameters) {
-            fUserParameterPanel->AddUserSlider(fMyKey, param.name, param.min, param.max); 
+            fUserParameterPanel->AddUserSlider(fMyKey, 
+                param.name, 
+                param.min, 
+                param.max, 
+                param.n_steps, 
+                param.format
+            ); 
         }
 
         AddFrame(

@@ -599,8 +599,25 @@ void EventDisplayKernel::AddDrawFunction(const std::string& window_name, std::st
 /// @param slider_name name of the slider
 /// @param min_val minimum value
 /// @param max_val maximum value 
-void EventDisplayKernel::AddUserSlider(const std::string& slider_name, double min_val, double max_val)
+void EventDisplayKernel::AddUserSlider(const std::string& slider_name, double min_val, double max_val, int n_steps, std::string format)
 {
+    // check that min < max
+    if (min_val >= max_val) {
+        Error(__func__,
+            "Error trying to add slider: '%s' -- Min val >= max val (%.4e > %.4e)", slider_name.c_str(), min_val, max_val
+        );  
+        std::exit(1);
+        return; 
+    }
+
+    if (n_steps < 2) {
+        Error(__func__,
+            "Error trying to add slider: '%s' -- n_steps < 2", slider_name.c_str() 
+        );  
+        std::exit(1);
+        return; 
+    }
+
     // search the list of paramters already added; make sure we aren't adding a duplicate. 
     auto find_it = std::find_if(
         fUserParameters.begin(),
@@ -610,13 +627,19 @@ void EventDisplayKernel::AddUserSlider(const std::string& slider_name, double mi
 
     if (find_it != fUserParameters.end()) {
         Error(__func__,
-            "Cannot add user parameter with name '%s'; a parameter with this name already exists (duplicate)", slider_name.c_str()
+            "Error trying to add slider: '%s' -- ; a parameter with this name already exists (duplicate)", slider_name.c_str()
         );  
         std::exit(1);
         return; 
-    }   
+    }       
 
-    fUserParameters.emplace_back(slider_name, min_val, max_val); 
+    fUserParameters.emplace_back(UserParameter<double>{ 
+        .name=slider_name, 
+        .min=min_val, 
+        .max=max_val, 
+        .n_steps=n_steps, 
+        .format=format 
+    }); 
 
     // 'set' the parameter once, to add it to the list of known parameters (before it's called by a user function!)
     this->SetParameter<double>(slider_name, (min_val + max_val)/2.); 

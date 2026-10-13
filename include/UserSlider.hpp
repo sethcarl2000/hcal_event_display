@@ -22,12 +22,21 @@ class UserParameterPanel;
 //  this panel holds all time controls the user can navigate & choose different timestamps with. 
 //
 class UserSlider : public TGHorizontalFrame {
+public:     
+
+    /// @brief Information for this slider 
+    struct Info { 
+        std::string name{""}; 
+        double min{0.}, max{0.}; 
+        int n_steps{1000}; 
+        std::string format{"%.4e"}; 
+    }; 
+
 private:    
 
     std::string fParamName{"none"}; 
     
-    double fMaxVal; 
-    double fMinVal; 
+    Info fInfo{}; 
 
     UserParameterPanel* fParent; 
 
@@ -43,10 +52,8 @@ private:
 
 public: 
 
-    //info needed to construct a slider
-    struct SliderInfo { std::string name; double min, max; }; 
 
-    UserSlider(Key<UserParameterPanel>, const TGWindow*, UserParameterPanel* parent, UInt_t width, const std::string& param_name, double min, double max);
+    UserSlider(Key<UserParameterPanel>, const TGWindow*, UserParameterPanel* parent, UInt_t width, Info info);
 
     // Signals (to propagate back to the kernel)
     void DoSliderMoved(); // signal (when the slider is moved)
