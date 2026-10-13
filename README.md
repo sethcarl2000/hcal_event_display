@@ -14,11 +14,11 @@ I will try to keep the 'main' branch clean & stable, but feel free to checkout t
 ### Quick start: 
 If you want to get started right away, the following series of commands (one command per line) will download a copy of all necessary code, compile it, and let ROOT know where to find the code it needs to use it in your ROOT macros: 
 ```bash
-cd /directory/to/place/download
+cd /my/folder
 git clone https://github.com/sethcarl2000/hcal_event_display.git
 cd hcal_event_display
 cmake -B build -S .
-cmake --build build -j
+cmake --build build -j   
 source build/set_edisp_env.sh
 ```
 ### Telling ROOT where to find the EDK source code
@@ -28,11 +28,17 @@ Both of these are accomplished by running the following command once each time y
 ```bash
 source build/set_edisp_env.sh
 ```
-If you want to have the EDK library loaded each time you launch a new bash terminal, open your bash login script under `~/.bashrc`, and add the following line: 
+If you want to have the EDK library loaded each time you launch a new bash terminal, Look for the following output when running the `cmake -B build -S .` command:  
 ```bash
-source /directory/to/place/download/hcal_event_display/build/set_edisp_env.sh 
+NOTE: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ For bash, if you want to have the EDK set up each time you login,
+ copy-and-paste the following line at the end of your `~/.bashrc` script:
+
+   [ -f "/my/folder/hcal_event_display/build/set_edisp_env.sh" ] && source /my/folder/hcal_event_display/build/set_edisp_env.sh"
+
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ```
-Where, as before, `/directory/to/place/download` is the path to the directory where you have downloaded and compiled this repo. This way, each time you log in, ROOT is automatically told where to find the EDK library. 
+This way, each time you log in, ROOT is automatically told where to find the EDK library. 
 ### Using the EDK in your own macros
 Once you have `source`'d the `set_edisp_env.sh` script, you just need to add the EDK header to your macro: 
 
