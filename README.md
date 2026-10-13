@@ -28,12 +28,11 @@ Both of these are accomplished by running the following command once each time y
 ```bash
 source build/set_edisp_env.sh
 ```
-If you want to have the EDK library loaded each time you launch a new bash terminal, just execute: 
+If you want to have the EDK library loaded each time you launch a new bash terminal, open your bash login script under `~/.bashrc`, and add the following line: 
 ```bash
-cat build/set_edisp_env.sh >> ~/.bashrc
-source ~/.bashrc
+source /directory/to/place/download/hcal_event_display/build/set_edisp_env.sh 
 ```
-Make sure you only execute this command once. This copies the commands from `set_edisp_env.sh` into your `.bashrc` login script (and runs it). So, each time you log in, the libraries for the EDK are loaded. 
+Where, as before, `/directory/to/place/download` is the path to the directory where you have downloaded and compiled this repo. This way, each time you log in, ROOT is automatically told where to find the EDK library. 
 ### Using the EDK in your own macros
 Once you have `source`'d the `set_edisp_env.sh` script, you just need to add the EDK header to your macro: 
 
