@@ -83,12 +83,8 @@ void test_modular_windows()
     kernel.AddDrawFunction("time", "goodblock_atime", draw_time_hist, Frequency::Type::kEachTimeStep);
     
 
-    // tell the kernel about the ROOT file we want to look at. 
-    kernel.SetFile("e1209016_fullreplay_3013_stream0_2_seg1_1.root");
-
     // tell the kernel the name of the TTree within the file to find.  
-    kernel.SetTreeName("T"); 
-
+    kernel.SetTreeAndFile("T", "e1209016_fullreplay_3013_stream0_2_seg1_1.root"); 
 
 
     // launch the interactive app. 

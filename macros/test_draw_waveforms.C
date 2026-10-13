@@ -55,7 +55,7 @@ void test_draw_waveforms()
     auto& kernel = EventDisplayKernel::Instance(); 
 
 
-    kernel.AddUserSlider("max_amplitude", 0, 0.5); 
+    kernel.AddUserSlider("max_amplitude", 0, 0.5, 10, "%.3f"); 
 
     // add our first user window (hcal)
     kernel.AddUserWindow("hcal", 500, 800);
@@ -81,8 +81,11 @@ void test_draw_waveforms()
     kernel.AddTimeSlider(0., 50.); 
 
     // tell the kernel about the ROOT file we want to look at
-    kernel.SetFile("data/e1209016_replayed_2034_stream0_2_seg0_0_firstevent0_nevent10000.root"); 
-    kernel.SetTreeName("T"); 
+    //kernel.SetTreeAndFile("T", "data/e1209016_replayed_2034_stream0_2_seg0_0_firstevent0_nevent10000.root"); 
+
+    ROOT::RDataFrame df("T", "data/e1209016_replayed_2034_stream0_2_seg0_0_firstevent0_nevent10000.root"); 
+
+    kernel.SetDataFrame(df); 
 
     // launch the interactive app 
     kernel.LaunchApp(); 

@@ -162,11 +162,13 @@ public:
     /// @return get the current timestamp 
     double GetTimestamp() const { return fTimestamp; }
 
-    // set the input file
-    void SetFile(std::string path_file) { fFilePath=path_file; }; 
+    /// @brief Set the tree and file name. 
+    /// @param tree_name tree name within .root file
+    /// @param file_name name of .root file to extract tree from 
+    void SetTreeAndFile(std::string tree_name, std::string file_name); 
 
-    // set the tree name
-    void SetTreeName(std::string tree_name) { fTreeName=tree_name; }; 
+    /// @brief Set the RDataFrame to take data from.
+    void SetDataFrame(ROOT::RDataFrame node); 
 
     /// @brief Add a 'time slider' to interactively set the timestamp. 
     /// @param t_min min timestamp of the slider (left)

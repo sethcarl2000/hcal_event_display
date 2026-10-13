@@ -77,15 +77,17 @@ EventDisplayKernel::EventDisplayKernel()
     fAppState = AppState::kNone; 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::LaunchApp()
+void EventDisplayKernel::SetDataFrame(ROOT::RDataFrame node) 
 {
-#ifdef DEBUG
-    std::cout << "in <"<<classname<<"::"<<__func__<<"> in body.\n"; 
-#endif
+    if (fDataFrame) {
+        Error(__func__, "DataFrame is already initialized. did you already call 'SetTreeAndFile' or 'SetDataFrame'?"); 
+        std::exit(1);
+    }
+
     //try and open the TFile
     try {
         
-        fDataFrame = std::make_unique<ROOT::RDataFrame>(fTreeName, fFilePath); 
+        fDataFrame = std::make_unique<ROOT::RDataFrame>(node); 
 
         if (!fDataFrame) {
             throw std::runtime_error("in <LaunchApp>: Dataframe failed to be constructed."); 
@@ -99,6 +101,46 @@ void EventDisplayKernel::LaunchApp()
             " file:     %s\n"
             " tree:     %s\n"
             " what():   %s", fFilePath.c_str(), fTreeName.c_str(), e.what()); 
+        std::exit(1);
+    }
+}
+//________________________________________________________________________________________________
+void EventDisplayKernel::SetTreeAndFile(std::string tree_name, std::string file_name)
+{
+    if (fDataFrame) {
+        Error(__func__, "DataFrame is already initialized. did you already call 'SetTreeAndFile' or 'SetDataFrame'?"); 
+        std::exit(1);
+    }
+
+    //try and open the TFile
+    try {
+        
+        fDataFrame = std::make_unique<ROOT::RDataFrame>(tree_name, file_name); 
+
+        if (!fDataFrame) {
+            throw std::runtime_error("in <LaunchApp>: Dataframe failed to be constructed."); 
+        }
+
+        //get list of column names
+        fBranchList = fDataFrame->GetColumnNames(); 
+        
+    } catch (const std::exception& e) {
+        Error(__func__, "Something went wrong trying to open the file / tree.\n"
+            " file:     %s\n"
+            " tree:     %s\n"
+            " what():   %s", fFilePath.c_str(), fTreeName.c_str(), e.what()); 
+        std::exit(1);
+    }
+}
+//________________________________________________________________________________________________
+void EventDisplayKernel::LaunchApp()
+{
+#ifdef DEBUG
+    std::cout << "in <"<<classname<<"::"<<__func__<<"> in body.\n"; 
+#endif
+
+    if (!fDataFrame) {
+        Error(__func__, "We don't have any data! you need to call 'SetTreeAndFile' or 'SetDataFrame' first."); 
         std::exit(1);
     }
 
