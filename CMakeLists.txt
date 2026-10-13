@@ -56,7 +56,7 @@ message(STATUS
     " \n"
     " NOTE: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
     " For bash, if you want to have the EDK set up each time you login,\n"
-    " copy-and-paste the following line at the end of your `~/.bashrc` script:\n\n"
+    " copy the following line, and paste it at the end of your `~/.bashrc` script:\n\n"
     "   [ -f \"${PROJECT_BINARY_DIR}/set_edisp_env.sh\" ] && source ${PROJECT_BINARY_DIR}/set_edisp_env.sh\"\n\n"
     " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
 )
