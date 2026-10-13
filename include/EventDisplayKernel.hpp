@@ -69,10 +69,10 @@ private:
     //destructor 
     ~EventDisplayKernel() = default; 
 
-    std::unique_ptr<ROOT::RDataFrame> fDataFrame{nullptr}; 
+    std::unique_ptr<ROOT::RDF::RNode> fDataFrame{nullptr}; 
 
     //return access to the above ptr (or throw an exception if it's null)
-    ROOT::RDataFrame* GetDataFrame(); 
+    ROOT::RDF::RNode* GetDataFrame(); 
 
     /// List of branches available in the TTree
     std::vector<std::string> fBranchList{}; 
@@ -168,7 +168,7 @@ public:
     void SetTreeAndFile(std::string tree_name, std::string file_name); 
 
     /// @brief Set the RDataFrame to take data from.
-    void SetDataFrame(ROOT::RDataFrame node); 
+    void SetDataFrame(ROOT::RDF::RNode node); 
 
     /// @brief Add a 'time slider' to interactively set the timestamp. 
     /// @param t_min min timestamp of the slider (left)

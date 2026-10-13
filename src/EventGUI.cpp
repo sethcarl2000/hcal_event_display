@@ -43,7 +43,9 @@ EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, U
         AddFrame(
             fTimeControlPanel,
             new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 5,5,5,5)
-        ); 
+        );
+        
+        fIsTimeSliderActive = true; 
     }
 
     //add user-specified parameters, if they gave us any. 

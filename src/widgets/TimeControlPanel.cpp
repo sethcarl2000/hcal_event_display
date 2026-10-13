@@ -50,6 +50,9 @@ void TimeControlPanel::DoSliderMoved()
 //________________________________________________________________________________________________
 void TimeControlPanel::SetTimestamp(Key<EventDisplayKernel>, double timestamp)
 {
+#ifdef DEBUG
+    Info(__func__, "in body. timestamp: %f", timestamp);
+#endif
     fTimestamp = timestamp; 
 
     //update the label
@@ -59,6 +62,10 @@ void TimeControlPanel::SetTimestamp(Key<EventDisplayKernel>, double timestamp)
     double slider_pos = (fTimestamp - fMinTimestamp) / (fMaxTimestamp - fMinTimestamp); 
     int slider_int_pos = (Int_t)(slider_pos * (double)(fSlider->GetMaxPosition() - fSlider->GetMinPosition())) + fSlider->GetMinPosition(); 
     fSlider->SetPosition(slider_int_pos); 
+
+#ifdef DEBUG
+    Info(__func__, "leaving body");
+#endif
 }
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________

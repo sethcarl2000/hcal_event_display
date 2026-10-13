@@ -77,7 +77,7 @@ EventDisplayKernel::EventDisplayKernel()
     fAppState = AppState::kNone; 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::SetDataFrame(ROOT::RDataFrame node) 
+void EventDisplayKernel::SetDataFrame(ROOT::RDF::RNode node) 
 {
     if (fDataFrame) {
         Error(__func__, "DataFrame is already initialized. did you already call 'SetTreeAndFile' or 'SetDataFrame'?"); 
@@ -87,7 +87,7 @@ void EventDisplayKernel::SetDataFrame(ROOT::RDataFrame node)
     //try and open the TFile
     try {
         
-        fDataFrame = std::make_unique<ROOT::RDataFrame>(node); 
+        fDataFrame = std::make_unique<ROOT::RDF::RNode>(node); 
 
         if (!fDataFrame) {
             throw std::runtime_error("in <LaunchApp>: Dataframe failed to be constructed."); 
@@ -115,7 +115,7 @@ void EventDisplayKernel::SetTreeAndFile(std::string tree_name, std::string file_
     //try and open the TFile
     try {
         
-        fDataFrame = std::make_unique<ROOT::RDataFrame>(tree_name, file_name); 
+        fDataFrame = std::make_unique<ROOT::RDF::RNode>(ROOT::RDataFrame(tree_name, file_name)); 
 
         if (!fDataFrame) {
             throw std::runtime_error("in <LaunchApp>: Dataframe failed to be constructed."); 
@@ -176,7 +176,7 @@ void EventDisplayKernel::LaunchApp()
         std::exit(1); 
         return; 
     }
-    std::cout << "done.\n";
+    std::cout << "done. " << fEventNumbers.size() << " events fetched.\n";
 
     fAppState = AppState::kActive; 
 
@@ -184,7 +184,13 @@ void EventDisplayKernel::LaunchApp()
     //
     //  Now, we should be ready to actually launch the GUI app. 
     //
-    LaunchGUI(); 
+#ifdef DEBUG
+    std::cout << "in <"<<__func__<<">: launching GUI...\n";     
+#endif
+    LaunchGUI();
+#ifdef DEBUG
+    std::cout << "in <"<<__func__<<">: done launching GUI\n";     
+#endif 
 
     //activate all windows, by default. 
     for (auto& user_window : fUserWindows) user_window->DoActivate(fMyKey); 
@@ -194,7 +200,7 @@ void EventDisplayKernel::LaunchApp()
     return; 
 }
 //________________________________________________________________________________________________
-ROOT::RDataFrame* EventDisplayKernel::GetDataFrame() 
+ROOT::RDF::RNode* EventDisplayKernel::GetDataFrame() 
 {
     //first, check if the dataframe is null 
     if (!fDataFrame) {
@@ -340,7 +346,7 @@ bool EventDisplayKernel::DoesBranchExist(std::string branch_name) const
 //________________________________________________________________________________________________
 bool EventDisplayKernel::BranchTypeMatches(std::string branch_name, const std::type_info& type)
 {
-    ROOT::RDataFrame *df; 
+    ROOT::RDF::RNode *df; 
     if (!(df = GetDataFrame())) {
         Error(__func__, "Dataframe is null"); 
         std::exit(1); 
@@ -446,6 +452,9 @@ size_t EventDisplayKernel::FindEventIndex(UInt_t event_number)
 //________________________________________________________________________________________________
 void EventDisplayKernel::LaunchGUI()
 {
+#ifdef DEBUG
+    Info(__func__, "In body");
+#endif
     if (fGUI) {
         Error(__func__, "Function invoked even though GUI object is already allocated.");
         std::exit(1);
@@ -456,18 +465,32 @@ void EventDisplayKernel::LaunchGUI()
     std::vector<std::string> window_names; 
     window_names.reserve(fUserWindows.size());
 
-    for (const auto& window : fUserWindows) window_names.emplace_back(window->GetName());
+    for (const auto& window : fUserWindows) window_names.emplace_back(window->GetName()); 
 
+#ifdef DEBUG
+    Info(__func__, "Initializing GUI");
+#endif
     fGUI = new EventGUI(fMyKey, gClient->GetRoot(), 500, 400, window_names, fUserParameters);
+#ifdef DEBUG
+    Info(__func__, "done");
+#endif
 
     if (auto time_panel = fGUI->GetTimeControlPanel(); time_panel != nullptr) {
-
+#ifdef DEBUG
+    Info(__func__, "setting timestamp. time panel: %p", time_panel);
+#endif
         time_panel->SetTimestamp(fMyKey, fTimestamp); 
-    } else {
+#ifdef DEBUG
+    Info(__func__, "done");
+#endif
+    }/* else {
         Error(__func__, "time panel is null!"); 
         std::exit(1); 
         return; 
-    }
+    }*/ 
+#ifdef DEBUG
+    Info(__func__, "Leaving body");
+#endif
 }
 
 //________________________________________________________________________________________________
@@ -517,13 +540,13 @@ void EventDisplayKernel::DrawCurrentEvent()
     for (auto& user_window : fUserWindows) {
 
 #ifdef DEBUG
-        const char* const window_name = user_window->GetName().c_str(); 
+        const auto window_name = user_window->GetName();  
 #endif
         //if the winow is inactive, skip it. 
         if (fAppState == AppState::kActive) {
             if (!user_window->IsActive()) {
 #ifdef DEBUG
-                Info(__func__, "UserWindow %s is inactive, skipping it.", window_name); 
+                Info(__func__, "UserWindow %s is inactive, skipping it.", window_name.c_str()); 
 #endif        
                 continue;      
             } 
@@ -531,7 +554,7 @@ void EventDisplayKernel::DrawCurrentEvent()
 
         try {
 #ifdef DEBUG
-            Info(__func__, "Trying to draw UserWindow: %s (Event draw routine)", window_name); 
+            Info(__func__, "Trying to draw UserWindow: %s (Event draw routine)", window_name.c_str()); 
 #endif
             //tell this user window that its canvas is the active one. 
             // this is important, because users may ask the kernel for access to the current canvas, and this method
@@ -539,7 +562,7 @@ void EventDisplayKernel::DrawCurrentEvent()
             user_window->DoDrawEvent(fMyKey);
 
 #ifdef DEBUG
-            Info(__func__, "Trying to draw UserWindow: %s (Timestamp draw routine)", window_name); 
+            Info(__func__, "Trying to draw UserWindow: %s (Timestamp draw routine)", window_name.c_str()); 
 #endif
             //std::printf("in <EventDisplayKernel::%s>: attempting to evaluate DrawFunction '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
 
@@ -573,13 +596,13 @@ template<typename T> void EventDisplayKernel::DoDrawTimestamp(Key<T>, double tim
     for (auto& user_window : fUserWindows) {
 
 #ifdef DEBUG
-        const char* const window_name = user_window->GetName().c_str(); 
+        const auto window_name = user_window->GetName(); 
 #endif
         //if the winow is inactive, skip it. 
         if (fAppState == AppState::kActive) {
             if (!user_window->IsActive()) {
 #ifdef DEBUG
-                Info(__func__, "UserWindow %s is inactive, skipping it.", window_name); 
+                Info(__func__, "UserWindow %s is inactive, skipping it.", window_name.c_str()); 
 #endif        
                 continue;      
             } 
@@ -821,9 +844,9 @@ void EventDisplayKernel::UpdateTimestamp()
         if (auto time_control = fGUI->GetTimeControlPanel(); time_control != nullptr) {
             time_control->SetTimestamp(fMyKey, fTimestamp);
         } else {
-            Error(__func__, "Time control panel should be active, but it's null!"); 
-            std::exit(1); 
-            return; 
+            //Error(__func__, "Time control panel should be active, but it's null!"); 
+            //std::exit(1); 
+            //return; 
         }
     }
     //inform each window about the updated timestamp

@@ -31,15 +31,15 @@ class EventGUI : public TGMainFrame {
     /// this is the class' 'Key' which lets the kernel call some methods of other classes that no other class can call.  
     Key<EventGUI> fMyKey{}; 
 
-    EventControlPanel* fEventControlPanel; 
+    EventControlPanel* fEventControlPanel{nullptr}; 
     
-    ToggleWindowsPanel* fToggleWindowsPanel; 
+    ToggleWindowsPanel* fToggleWindowsPanel{nullptr}; 
 
-    TimeControlPanel* fTimeControlPanel;
+    TimeControlPanel* fTimeControlPanel{nullptr};
     
-    UserParameterPanel* fUserParameterPanel; 
+    UserParameterPanel* fUserParameterPanel{nullptr}; 
 
-    bool fIsTimeSliderActive; 
+    bool fIsTimeSliderActive{false}; 
 
 
 public: 
@@ -76,7 +76,7 @@ public:
     // update status of all windows
     void SetWindowStatus(Key<EventDisplayKernel>, const std::vector<std::unique_ptr<UserWindow>>& windows);
 
-    TimeControlPanel* GetTimeControlPanel() { return fTimeControlPanel; }   
+    TimeControlPanel* GetTimeControlPanel() { return fIsTimeSliderActive ? fTimeControlPanel : nullptr; }   
 
     ClassDefOverride(EventGUI,0);
 };
