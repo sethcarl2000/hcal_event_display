@@ -51,6 +51,16 @@ configure_file(
     @ONLY # only find-and-replace variables with the @VAR@ syntax 
 )
 
+# tell the user how the can have the script auto-executed on startup;
+message(STATUS 
+    " \n"
+    " NOTE: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+    " For bash, if you want to have the EDK set up each time you login,\n"
+    " copy-and-paste the following line at the end of your `~/.bashrc` script:\n\n"
+    "   [ -f \"${PROJECT_BINARY_DIR}/set_edisp_env.sh\" ] && source ${PROJECT_BINARY_DIR}/set_edisp_env.sh\"\n\n"
+    " ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+)
+
 option(DEBUG "Enable GUI debug printing" OFF)
 if (DEBUG)
     target_compile_definitions(EventDisplay PRIVATE DEBUG)
