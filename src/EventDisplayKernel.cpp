@@ -422,12 +422,16 @@ void EventDisplayKernel::Draw(TObject* object, const char* option)
         th1->SetDirectory(nullptr); 
     }
 
+    
     if (fAppState == AppState::kActive) {
         
         fCurrentUserWindow->AddPrimitive(fMyKey, object); 
 
+        // make sure the current canvas is active. 
+        // this is neccessary, as the 'gPad' might be pointing to a sub-pad of the current canvas (like in divided pads with TCanvas::Divide)
         auto canv = GetCanvas(); 
-        canv->cd(); 
+        if (!canv->FindObject(gPad)) canv->cd();
+
         object->Draw(option); 
         return; 
     
