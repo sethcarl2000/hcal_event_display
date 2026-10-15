@@ -64,6 +64,7 @@ message(STATUS
 option(DEBUG "Enable GUI debug printing" OFF)
 if (DEBUG)
     target_compile_definitions(EventDisplay PRIVATE DEBUG)
+    target_compile_options(EventDisplay PRIVATE -g)
 endif()
 
 root_generate_dictionary(G__EventDisplay ${headers} LINKDEF include/LinkDef.h MODULE EventDisplay)
