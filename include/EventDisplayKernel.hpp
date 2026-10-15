@@ -86,8 +86,6 @@ private:
     /// @return 'true' if branch exists, 'false' otherwise. 
     bool DoesBranchExist(std::string branch) const; 
 
-    //resets each user window's canvases, and draws the current event.  
-    void DrawCurrentEvent(); 
 
     /// @brief Check to seee if the type of a branch matches a given type
     /// @param branch_name name of branch in RDataFrame
@@ -246,6 +244,9 @@ public:
     void CloseApp(Key<EventGUI>);
     template<typename T> void DoDrawTimestamp(Key<T>, double timestamp);
     void DoToggleWindow(Key<EventGUI>, std::string window_name, bool is_active);
+
+    //resets each user window's canvases, and draws the current event.  
+    void DrawCurrentEvent(); 
 
     void DoSetTimestamp(Key<TimeControlPanel>, double timestamp);
 
