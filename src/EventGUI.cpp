@@ -114,7 +114,7 @@ void EventGUI::DoToggleWindow(const std::string& window_name, bool do_activate)
     Info(__func__, "Propagating signal to kernel...");
 #endif
 
-    //tell the kernel to update the window 
+    // tell the kernel to update the window 
     kernel.DoToggleWindow(fMyKey, window_name, do_activate);
 }
 //________________________________________________________________________________________________

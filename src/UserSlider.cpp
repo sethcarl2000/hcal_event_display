@@ -41,14 +41,15 @@ void UserSlider::DoSliderMoved()
     auto& kernel = EventDisplayKernel::Instance(); 
 
     // set this new event index 
-    kernel.SetParameter<double>(fParamName, val); 
+    kernel.SetParameter<double>(fInfo.name, val); 
     
     // refresh all the drawn windows p-
     // [[[[[[[[[[[[[[[[[[[[[[[[          7-l=kvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvmddddddddddddddddddddddddddddddddddddddddddddddddddddddddcX]]]]]]]]]]]]]]]]]]]]]]]]
     //      - muon's comment
 
-    kernel.DoDrawTimestamp(fMyKey, kernel.GetTimestamp()); 
+    kernel.DrawCurrentEvent(); 
+    //kernel.DoDrawTimestamp(fMyKey, kernel.GetTimestamp()); 
     
     fParamValueLabel->SetText(Form(fInfo.format.c_str(), val)); 
 }
