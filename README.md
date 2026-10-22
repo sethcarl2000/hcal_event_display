@@ -1,4 +1,4 @@
-# Interactive Event Display 
+# Event Display Kernel (EDK)
 
 I probably need to change the name from 'hcal_event_display', considering that the main point of the project is its general applicability to other experiments / detectors. 
 
