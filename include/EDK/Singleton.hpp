@@ -1,12 +1,12 @@
-#ifndef EventDisplayKernel_hpp
-#define EventDisplayKernel_hpp
+#ifndef EDK_Singleton_hpp
+#define EDK_Singleton_hpp
 
-#include <Key.hpp>
-#include <DrawFunction.hpp>
-#include <UserWindow.hpp>
-#include <Frequency_Type.hpp>
-#include <UserParameter.hpp>
-#include <UserSlider.hpp>
+#include <EDK/Key.hpp>
+#include <EDK/DrawFunction.hpp>
+#include <EDK/UserWindow.hpp>
+#include <EDK/Frequency_Type.hpp>
+#include <EDK/UserParameter.hpp>
+#include <EDK/UserSlider.hpp>
 // TGUI headers
 #include <TGFrame.h>
 #include <TGWindow.h>
@@ -30,6 +30,9 @@
 #include <typeinfo> 
 #include <utility> 
 
+namespace EDK 
+{
+
 //enum to identify different data type requests 
 enum class dtype {
     // double 
@@ -40,7 +43,7 @@ enum class dtype {
     uint
 }; 
 
-//put here a list of classes that we're going to allow to propagate signals to the EventDisplayKernel (not the user!)
+//put here a list of classes that we're going to allow to propagate signals to the Singleton (not the user!)
 class EventGUI; 
 
 class EventGUI; 
@@ -55,19 +58,19 @@ struct UserParameterInfo {
 enum class ParamOperation { kSet, kGet };
 
 //implementing this class as a meyer's singleton 
-class EventDisplayKernel {
+class Singleton {
 public: 
     enum class AppState { kNone=0, kInit, kActive, kExit };
 private: 
 
     /// this is the kernel's 'Key' which lets the kernel call some methods of other classes that no other class can call.  
-    Key<EventDisplayKernel> fMyKey{}; 
+    Key<Singleton> fMyKey{}; 
 
     //constructor 
-    EventDisplayKernel(); 
+    Singleton(); 
 
     //destructor 
-    ~EventDisplayKernel() = default; 
+    ~Singleton() = default; 
 
     std::unique_ptr<ROOT::RDF::RNode> fDataFrame{nullptr}; 
 
@@ -148,11 +151,11 @@ private:
 public: 
 
     //delete copy constructor & copy assign. operator 
-    EventDisplayKernel(const EventDisplayKernel&) = delete; 
-    EventDisplayKernel& operator=(const EventDisplayKernel&) = delete; 
+    Singleton(const Singleton&) = delete; 
+    Singleton& operator=(const Singleton&) = delete; 
 
     //Access to single, static instance 
-    static EventDisplayKernel& Instance(); 
+    static Singleton& Instance(); 
 
     /// @return current app state (none, init, active)
     AppState GetAppState() const { return fAppState; }
@@ -196,7 +199,7 @@ public:
     void AddUserSlider(const std::string& slider_name, double min_val, double max_val, int n_steps=1000, std::string format="%.4e"); 
 
     /// @brief set a user-specified parameter, globally accessible througout all other user-functions
-    /// @tparam T type of param. see 'EventDisplayKernel.cpp' for valid types. 
+    /// @tparam T type of param. see 'Singleton.cpp' for valid types. 
     /// @param param_name unique name of the parameter. 
     /// @param val value of the parameter to set. 
     template <typename T> void SetParameter(const std::string& param_name, T val);
@@ -254,7 +257,7 @@ public:
     void SetWindowStatus(); 
     
     /// @brief Draw requested event index. abort app if illegal request is made. 
-    /// @tparam T The class which is allowed to call this method (EventGUI or EventDisplayKernel ONLY)
+    /// @tparam T The class which is allowed to call this method (EventGUI or Singleton ONLY)
     /// @param event_index the index of event to draw. 
     template<typename T> void SetEventIndex(Key<T>, size_t event_index); 
 
@@ -265,6 +268,6 @@ public:
 }; 
 
 
-
+}
 
 #endif

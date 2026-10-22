@@ -1,8 +1,11 @@
-#include <EventGUI.hpp>
-#include <UserWindow.hpp>
+#include <EDK/EventGUI.hpp>
+#include <EDK/UserWindow.hpp>
 //stdlib headers
 #include <algorithm> 
 #include <cstdlib> 
+
+namespace EDK 
+{
 
 //________________________________________________________________________________________________
 ToggleWindowsPanel::ToggleWindowsPanel(Key<EventGUI>, const TGWindow* ptr, EventGUI* parent, const std::vector<std::string>& window_names)
@@ -125,3 +128,5 @@ void ToggleWindowsPanel::SetWindowStatus(Key<EventGUI>, const std::vector<std::u
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
+
+}

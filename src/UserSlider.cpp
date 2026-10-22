@@ -1,6 +1,11 @@
-#include <UserSlider.hpp>
-#include <EventDisplayKernel.hpp>
-#include <EventGUI.hpp>
+#include <EDK/UserSlider.hpp>
+#include <EDK/Singleton.hpp>
+#include <EDK/EventGUI.hpp>
+
+
+namespace EDK 
+{
+
 
 //____________________________________________________________________________________________________________
 UserSlider::UserSlider(Key<UserParameterPanel>, const TGWindow* ptr, UserParameterPanel* parent, UInt_t width, Info info)
@@ -38,7 +43,7 @@ void UserSlider::DoSliderMoved()
 
     double val = fInfo.min + slider_pos*(fInfo.max - fInfo.min);
 
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = Singleton::Instance(); 
 
     // set this new event index 
     kernel.SetParameter<double>(fInfo.name, val); 
@@ -64,3 +69,5 @@ void UserSlider::DoSliderMoved()
 //____________________________________________________________________________________________________________
 //____________________________________________________________________________________________________________
 //____________________________________________________________________________________________________________
+
+}

@@ -1,9 +1,9 @@
-#ifndef UserApp_hpp
-#define UserApp_hpp
+#ifndef EDK_UserApp_hpp
+#define EDK_UserApp_hpp
 
-#include <DrawFunction.hpp>
-#include <Key.hpp>
-#include <UserSlider.hpp>
+#include <EDK/DrawFunction.hpp>
+#include <EDK/Key.hpp>
+#include <EDK/UserSlider.hpp>
 //TGUI headers
 #include <TGFrame.h>
 #include <TRootEmbeddedCanvas.h> 
@@ -12,6 +12,9 @@
 #include <TObject.h> 
 //stdlib headers
 #include <functional> 
+
+namespace EDK 
+{
 
 class UserWindow; 
 
@@ -52,5 +55,6 @@ public:
 
 }; 
 
+}
 
 #endif

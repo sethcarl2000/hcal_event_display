@@ -1,5 +1,5 @@
-#include <EventGUI.hpp>
-#include <EventDisplayKernel.hpp>
+#include <EDK/EventGUI.hpp>
+#include <EDK/Singleton.hpp>
 //TGUI headers
 #include <TApplication.h>
 #include <TError.h> 
@@ -7,14 +7,17 @@
 #include <cstdlib> 
 #include <algorithm> 
 
+namespace EDK 
+{
+
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
-EventGUI::EventGUI(Key<EventDisplayKernel> key, const TGWindow* ptr, UInt_t w, UInt_t h, const std::vector<std::string>& window_names, const std::vector<UserParameter<double>>& user_parameters)
+EventGUI::EventGUI(Key<Singleton> key, const TGWindow* ptr, UInt_t w, UInt_t h, const std::vector<std::string>& window_names, const std::vector<UserParameter<double>>& user_parameters)
     : TGMainFrame( gClient->GetRoot(), w, h ) 
 {
     SetCleanup(kDeepCleanup); 
 
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = Singleton::Instance(); 
 
     // Add the event control panel
     fEventControlPanel = new EventControlPanel(fMyKey, this, this, 500);
@@ -85,7 +88,7 @@ void EventGUI::CloseWindow()
     Info(__func__, "telling kernel to close app..");
 #endif 
     //tell the kernel that the user called for us to close the app
-    EventDisplayKernel::Instance().CloseApp(fMyKey);
+    Singleton::Instance().CloseApp(fMyKey);
 #ifdef DEBUG
     Info(__func__, "leaving body");
 #endif 
@@ -93,22 +96,22 @@ void EventGUI::CloseWindow()
 //________________________________________________________________________________________________
 void EventGUI::DoNextEvent()
 {
-    EventDisplayKernel::Instance().DoNextEvent(fMyKey);
+    Singleton::Instance().DoNextEvent(fMyKey);
 }
 //________________________________________________________________________________________________
 void EventGUI::DoPrevEvent()
 {
-    EventDisplayKernel::Instance().DoPrevEvent(fMyKey);
+    Singleton::Instance().DoPrevEvent(fMyKey);
 }
 //________________________________________________________________________________________________
 void EventGUI::SetEventIndex(size_t index)
 {
-    EventDisplayKernel::Instance().SetEventIndex(fMyKey, index);
+    Singleton::Instance().SetEventIndex(fMyKey, index);
 }
 //________________________________________________________________________________________________
 void EventGUI::DoToggleWindow(const std::string& window_name, bool do_activate) 
 {
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = Singleton::Instance(); 
 
 #ifdef DEBUG
     Info(__func__, "Propagating signal to kernel...");
@@ -118,12 +121,12 @@ void EventGUI::DoToggleWindow(const std::string& window_name, bool do_activate)
     kernel.DoToggleWindow(fMyKey, window_name, do_activate);
 }
 //________________________________________________________________________________________________
-void EventGUI::NewEventIndex(Key<EventDisplayKernel>, size_t index)
+void EventGUI::NewEventIndex(Key<Singleton>, size_t index)
 {
     fEventControlPanel->NewEventIndex(fMyKey, index);
 }
 //________________________________________________________________________________________________
-void EventGUI::SetWindowStatus(Key<EventDisplayKernel>, const std::vector<std::unique_ptr<UserWindow>>& windows)
+void EventGUI::SetWindowStatus(Key<Singleton>, const std::vector<std::unique_ptr<UserWindow>>& windows)
 {
     fToggleWindowsPanel->SetWindowStatus(fMyKey, windows);
 }
@@ -133,3 +136,5 @@ void EventGUI::SetWindowStatus(Key<EventDisplayKernel>, const std::vector<std::u
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
+
+}

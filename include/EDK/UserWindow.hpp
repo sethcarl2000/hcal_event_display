@@ -1,11 +1,11 @@
-#ifndef UserWindow_hpp
-#define UserWindow_hpp
+#ifndef EDK_UserWindow_hpp
+#define EDK_UserWindow_hpp
 
-#include <DrawFunction.hpp>
-#include <UserApp.hpp> 
-#include <Key.hpp>
-#include <UserSlider.hpp> 
-#include <Frequency_Type.hpp>
+#include <EDK/DrawFunction.hpp>
+#include <EDK/UserApp.hpp> 
+#include <EDK/Key.hpp>
+#include <EDK/UserSlider.hpp> 
+#include <EDK/Frequency_Type.hpp>
 //TGUI headers
 #include <TGFrame.h>
 #include <TRootEmbeddedCanvas.h> 
@@ -16,7 +16,10 @@
 #include <vector> 
 #include <utility> 
 
-class EventDisplayKernel; 
+namespace EDK 
+{
+
+class Singleton; 
 
 class UserWindow {
 private: 
@@ -57,7 +60,7 @@ public:
 
     // Default constructor. We add a 'kernel key' as an argument,
     // because it's an object that only the kernel can create. 
-    UserWindow(Key<EventDisplayKernel>, std::string name, UInt_t width, UInt_t height) 
+    UserWindow(Key<Singleton>, std::string name, UInt_t width, UInt_t height) 
         : fName{name}, fWidth{width}, fHeight{height}
     {}; 
 
@@ -83,32 +86,34 @@ public:
 
     /////////////////////////
     //
-    // This is a list of signals that only EventDisplayKernel can emit
+    // This is a list of signals that only Singleton can emit
     //
     //
 
     //Add a drawn object to this window. 
-    void AddDrawnItem(Key<EventDisplayKernel>, DrawFunction draw_function, Frequency::Type); 
+    void AddDrawnItem(Key<Singleton>, DrawFunction draw_function, Frequency::Type); 
 
     /// @brief Activate this user window, if it's deactivated. noop if it's already active. 
     /// see implemenation for a list of valid senders. 
-    void DoActivate(Key<EventDisplayKernel>);  
+    void DoActivate(Key<Singleton>);  
 
     /// @brief Deactivate this user window, if it's active. noop if it's already deactivated. 
     void DoDeactivate(); 
 
     /// @brief Draw all objects fresh for a new event. 
-    void DoDrawEvent(Key<EventDisplayKernel>) { DrawObjects(Frequency::Type::kEachEvent); } 
+    void DoDrawEvent(Key<Singleton>) { DrawObjects(Frequency::Type::kEachEvent); } 
 
     /// @brief Draw all objects fresh for a new timestamp. 
-    void DoDrawTimestamp(Key<EventDisplayKernel>) { DrawObjects(Frequency::Type::kEachTimeStep); } 
+    void DoDrawTimestamp(Key<Singleton>) { DrawObjects(Frequency::Type::kEachTimeStep); } 
 
     /// @brief Add drawn TObject to list of drawn TObjects
     /// @param obj 
-    void AddPrimitive(Key<EventDisplayKernel>, TObject* obj) { AddPrimitive(obj, CurrentDrawFunctionFreqeuncy()); }
+    void AddPrimitive(Key<Singleton>, TObject* obj) { AddPrimitive(obj, CurrentDrawFunctionFreqeuncy()); }
 };
 
 // equivalence operator for two 'UserWindow' instances 
 inline bool operator==(const UserWindow& lhs, const UserWindow& rhs) { return lhs.GetName() == rhs.GetName(); } 
+
+}
 
 #endif

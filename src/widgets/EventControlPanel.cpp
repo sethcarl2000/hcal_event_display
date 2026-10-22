@@ -1,15 +1,18 @@
 
-#include <EventGUI.hpp>
-#include <EventDisplayKernel.hpp>
+#include <EDK/EventGUI.hpp>
+#include <EDK/Singleton.hpp>
 // TGUI headers
 #include <TGLabel.h>
 #include <TGSlider.h>
+
+namespace EDK 
+{
 
 //________________________________________________________________________________________________
 EventControlPanel::EventControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGUI* parent, UInt_t width)
     : TGGroupFrame(ptr, "Event Controls", kVerticalFrame), fParent{parent}, fRand{}
 {
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = Singleton::Instance(); 
 
     ///////////////////////////////////////////////////////////////
     //
@@ -55,9 +58,9 @@ EventControlPanel::EventControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGU
 void EventControlPanel::DoRandomEvent()
 {
     //pick a random number
-    size_t rand_index = (size_t)(fRand.Rndm() * (EventDisplayKernel::Instance().GetNEvents() - 1));
+    size_t rand_index = (size_t)(fRand.Rndm() * (Singleton::Instance().GetNEvents() - 1));
 #ifdef DEBUG
-    Info(__func__, "Random event index: %zi / %zi", rand_index, EventDisplayKernel::Instance().GetNEvents()-1);
+    Info(__func__, "Random event index: %zi / %zi", rand_index, Singleton::Instance().GetNEvents()-1);
 #endif 
     fParent->SetEventIndex(rand_index); 
 }
@@ -66,7 +69,7 @@ void EventControlPanel::NewEventIndex(Key<EventGUI>, size_t index)
 {
     fEventIndex = index; 
     
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = Singleton::Instance(); 
 
     size_t max_event_index = kernel.GetNEvents()-1; 
     
@@ -88,7 +91,7 @@ void EventControlPanel::DoSliderReleased()
     double slider_pos = (double)(fSlider->GetPosition() - fSlider->GetMinPosition()); 
     slider_pos = slider_pos / ((double)(fSlider->GetMaxPosition() - fSlider->GetMinPosition()));
 
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = Singleton::Instance(); 
 
     size_t max_event_index = kernel.GetNEvents()-1; 
     
@@ -100,3 +103,5 @@ void EventControlPanel::DoSliderReleased()
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
+
+}

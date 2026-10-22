@@ -1,8 +1,8 @@
-#ifndef EventGUI_hpp
-#define EventGUI_hpp
+#ifndef EDK_EventGUI_hpp
+#define EDK_EventGUI_hpp
 
-#include <Key.hpp>
-#include <UserParameter.hpp>
+#include <EDK/Key.hpp>
+#include <EDK/UserParameter.hpp>
 // ROOT headers
 #include <TRandom3.h> 
 // TGUI headers
@@ -16,8 +16,11 @@
 #include <vector> 
 #include <memory> 
 
+namespace EDK 
+{
+
 class UserWindow; 
-class EventDisplayKernel;
+class Singleton;
 
 struct WindowCheckbox { std::string name; TGCheckButton* button; };  
 
@@ -47,7 +50,7 @@ public:
     // Default constructor. We add a 'kernel key' as an argument,
     // because it's an object that only the kernel can create. 
     EventGUI(
-        Key<EventDisplayKernel>,
+        Key<Singleton>,
         const TGWindow* ptr,
         UInt_t w, UInt_t h,
         const std::vector<std::string>& window_names, 
@@ -72,9 +75,9 @@ public:
     void CloseWindow() override; 
 
     // this siganl tells the GUI that a new event has beeen picked
-    void NewEventIndex(Key<EventDisplayKernel>, size_t index); 
+    void NewEventIndex(Key<Singleton>, size_t index); 
     // update status of all windows
-    void SetWindowStatus(Key<EventDisplayKernel>, const std::vector<std::unique_ptr<UserWindow>>& windows);
+    void SetWindowStatus(Key<Singleton>, const std::vector<std::unique_ptr<UserWindow>>& windows);
 
     TimeControlPanel* GetTimeControlPanel() { return fIsTimeSliderActive ? fTimeControlPanel : nullptr; }   
 
@@ -180,7 +183,7 @@ public:
 
     void SetTimeRange(double t_min, double t_max) { fMinTimestamp=t_min; fMaxTimestamp=t_max; } 
 
-    void SetTimestamp(Key<EventDisplayKernel>, double timestamp); 
+    void SetTimestamp(Key<Singleton>, double timestamp); 
 
     ClassDef(TimeControlPanel,0);
 };
@@ -212,5 +215,7 @@ public:
 
     ClassDef(UserParameterPanel,0);
 };
+
+}
 
 #endif

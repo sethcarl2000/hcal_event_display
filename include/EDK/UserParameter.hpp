@@ -1,10 +1,13 @@
-#ifndef UserParameter_hpp
-#define UserParameter_hpp
+#ifndef EDK_UserParameter_hpp
+#define EDK_UserParameter_hpp
 
 #include <string> 
 #include <cmath> 
 
-//basic struct containing information on a user parameter 
+namespace EDK 
+{
+
+    //basic struct containing information on a user parameter 
 template <typename T> struct UserParameter {
     
     std::string name; 
@@ -20,5 +23,7 @@ template <typename T> struct UserParameter {
         return std::min<T>( std::max<T>(val, min), max );
     }
 }; 
+
+}
 
 #endif

@@ -1,6 +1,6 @@
 
-#include <EventDisplayKernel.hpp>
-#include <EventGUI.hpp> 
+#include <EDK/Singleton.hpp>
+#include <EDK/EventGUI.hpp> 
 // ROOT headers
 #include <TError.h> 
 #include <TObjArray.h>
@@ -25,8 +25,12 @@
 #include <map> 
 #include <algorithm> 
 
+
+namespace EDK 
+{
+
 #ifdef DEBUG
-constexpr char classname[] = "EventDisplayKernel"; 
+constexpr char classname[] = "Singleton"; 
 #endif
 
 class UserSlider; 
@@ -37,12 +41,12 @@ namespace inst_helpers {
 
 //________________________________________________________________________________________________
 //Access to single, static instance 
-EventDisplayKernel& EventDisplayKernel::Instance() { 
-    static EventDisplayKernel instance; 
+Singleton& Singleton::Instance() { 
+    static Singleton instance; 
     return instance; 
 }
 //________________________________________________________________________________________________
-template<typename T> void EventDisplayKernel::SetEventIndex(Key<T>, size_t index)
+template<typename T> void Singleton::SetEventIndex(Key<T>, size_t index)
 {
     //if (index == fEventIndex) return; //noop 
     if (index >= fEventNumbers.size()) {
@@ -65,10 +69,10 @@ template<typename T> void EventDisplayKernel::SetEventIndex(Key<T>, size_t index
 //________________________________________________________________________________________________
 // For the above method, the template arguments listed here represent the only two class types 
 // which are allowed to call this method. 
-template void EventDisplayKernel::SetEventIndex(Key<EventDisplayKernel>, size_t index); // <- we (EventDisplayKernel) are allowed to call this function
-template void EventDisplayKernel::SetEventIndex(Key<EventGUI>,           size_t index); // <- EventGUI is allowed to call this method. 
+template void Singleton::SetEventIndex(Key<Singleton>, size_t index); // <- we (Singleton) are allowed to call this function
+template void Singleton::SetEventIndex(Key<EventGUI>,           size_t index); // <- EventGUI is allowed to call this method. 
 //________________________________________________________________________________________________
-EventDisplayKernel::EventDisplayKernel()
+Singleton::Singleton()
 {
 #ifdef DEBUG
     std::cout << "in <"<<classname<<"> in constructor.\n"; 
@@ -77,7 +81,7 @@ EventDisplayKernel::EventDisplayKernel()
     fAppState = AppState::kNone; 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::SetDataFrame(ROOT::RDF::RNode node) 
+void Singleton::SetDataFrame(ROOT::RDF::RNode node) 
 {
     if (fDataFrame) {
         Error(__func__, "DataFrame is already initialized. did you already call 'SetTreeAndFile' or 'SetDataFrame'?"); 
@@ -105,7 +109,7 @@ void EventDisplayKernel::SetDataFrame(ROOT::RDF::RNode node)
     }
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::SetTreeAndFile(std::string tree_name, std::string file_name)
+void Singleton::SetTreeAndFile(std::string tree_name, std::string file_name)
 {
     if (fDataFrame) {
         Error(__func__, "DataFrame is already initialized. did you already call 'SetTreeAndFile' or 'SetDataFrame'?"); 
@@ -133,7 +137,7 @@ void EventDisplayKernel::SetTreeAndFile(std::string tree_name, std::string file_
     }
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::LaunchApp()
+void Singleton::LaunchApp()
 {
 #ifdef DEBUG
     std::cout << "in <"<<classname<<"::"<<__func__<<"> in body.\n"; 
@@ -200,7 +204,7 @@ void EventDisplayKernel::LaunchApp()
     return; 
 }
 //________________________________________________________________________________________________
-ROOT::RDF::RNode* EventDisplayKernel::GetDataFrame() 
+ROOT::RDF::RNode* Singleton::GetDataFrame() 
 {
     //first, check if the dataframe is null 
     if (!fDataFrame) {
@@ -211,7 +215,7 @@ ROOT::RDF::RNode* EventDisplayKernel::GetDataFrame()
     return fDataFrame.get(); 
 }
 //________________________________________________________________________________________________
-template<typename T> T EventDisplayKernel::GetData(std::string branch_name) 
+template<typename T> T Singleton::GetData(std::string branch_name) 
 {
     //this is a cointainer for all our data of type 'T'. 
     // each event is a single entry in a vector, 
@@ -325,7 +329,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
 
 
                 //let the user know this branch was added successfully 
-                std::printf("in <EventDisplayKernel::GetData(init phase)>: Requested branch '%s' added. \n", branch_name.c_str());
+                std::printf("in <Singleton::GetData(init phase)>: Requested branch '%s' added. \n", branch_name.c_str());
             }
             break;
         } 
@@ -334,7 +338,7 @@ template<typename T> T EventDisplayKernel::GetData(std::string branch_name)
     return T{}; 
 }
 //________________________________________________________________________________________________
-bool EventDisplayKernel::DoesBranchExist(std::string branch_name) const 
+bool Singleton::DoesBranchExist(std::string branch_name) const 
 {
     for (const auto& branch : fBranchList) {
         if (branch_name == branch) { return true; }
@@ -344,7 +348,7 @@ bool EventDisplayKernel::DoesBranchExist(std::string branch_name) const
 //________________________________________________________________________________________________
 
 //________________________________________________________________________________________________
-bool EventDisplayKernel::BranchTypeMatches(std::string branch_name, const std::type_info& type)
+bool Singleton::BranchTypeMatches(std::string branch_name, const std::type_info& type)
 {
     ROOT::RDF::RNode *df; 
     if (!(df = GetDataFrame())) {
@@ -381,7 +385,7 @@ bool EventDisplayKernel::BranchTypeMatches(std::string branch_name, const std::t
     return (data_type->GetType() == TDataType::GetType(type));  
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::Draw(TObject* object, const char* option)
+void Singleton::Draw(TObject* object, const char* option)
 {
     if (fCurrentUserWindow == nullptr) {
         Warning(__func__, 
@@ -441,7 +445,7 @@ void EventDisplayKernel::Draw(TObject* object, const char* option)
     }
 }
 //________________________________________________________________________________________________
-size_t EventDisplayKernel::FindEventIndex(UInt_t event_number)
+size_t Singleton::FindEventIndex(UInt_t event_number)
 {
     auto find_it = std::find_if(fEventNumbers.begin(), fEventNumbers.end(), [event_number](UInt_t lhs){ return lhs == event_number; }); 
 
@@ -454,7 +458,7 @@ size_t EventDisplayKernel::FindEventIndex(UInt_t event_number)
     return (*find_it); 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::LaunchGUI()
+void Singleton::LaunchGUI()
 {
 #ifdef DEBUG
     Info(__func__, "In body");
@@ -498,7 +502,7 @@ void EventDisplayKernel::LaunchGUI()
 }
 
 //________________________________________________________________________________________________
-TCanvas* EventDisplayKernel::GetCanvas()
+TCanvas* Singleton::GetCanvas()
 {
     if (fAppState != AppState::kActive) {
         Error(__func__, "GetCanvas() invoked in inactive state. (No canvas exists!)");
@@ -511,7 +515,7 @@ TCanvas* EventDisplayKernel::GetCanvas()
     std::exit(1); 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::DoNextEvent(Key<EventGUI>)
+void Singleton::DoNextEvent(Key<EventGUI>)
 {
     if(size_t index = GetEventIndex(); index < GetNEvents()-1) {
         SetEventIndex(fMyKey, index+1);  
@@ -520,7 +524,7 @@ void EventDisplayKernel::DoNextEvent(Key<EventGUI>)
     }
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::DoPrevEvent(Key<EventGUI>)
+void Singleton::DoPrevEvent(Key<EventGUI>)
 {
     if(size_t index = GetEventIndex(); index > 0) {
         SetEventIndex(fMyKey, index-1);  
@@ -530,7 +534,7 @@ void EventDisplayKernel::DoPrevEvent(Key<EventGUI>)
 }
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
-void EventDisplayKernel::DrawCurrentEvent()
+void Singleton::DrawCurrentEvent()
 {
     if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
     std::printf("drawing event %u...", fEventNumber);
@@ -568,7 +572,7 @@ void EventDisplayKernel::DrawCurrentEvent()
 #ifdef DEBUG
             Info(__func__, "Trying to draw UserWindow: %s (Timestamp draw routine)", window_name.c_str()); 
 #endif
-            //std::printf("in <EventDisplayKernel::%s>: attempting to evaluate DrawFunction '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
+            //std::printf("in <Singleton::%s>: attempting to evaluate DrawFunction '%s'...\n", __func__, fCurrentDrawFunction.c_str()); 
 
             user_window->DoDrawTimestamp(fMyKey); 
 
@@ -586,7 +590,7 @@ void EventDisplayKernel::DrawCurrentEvent()
 
 }
 //________________________________________________________________________________________________
-template<typename T> void EventDisplayKernel::DoDrawTimestamp(Key<T>, double timestamp)
+template<typename T> void Singleton::DoDrawTimestamp(Key<T>, double timestamp)
 {
     if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
 
@@ -637,10 +641,10 @@ template<typename T> void EventDisplayKernel::DoDrawTimestamp(Key<T>, double tim
     }
 
 }
-template void EventDisplayKernel::DoDrawTimestamp(Key<EventGUI>, double timestamp);
-template void EventDisplayKernel::DoDrawTimestamp(Key<UserSlider>, double timestamp);
+template void Singleton::DoDrawTimestamp(Key<EventGUI>, double timestamp);
+template void Singleton::DoDrawTimestamp(Key<UserSlider>, double timestamp);
 //________________________________________________________________________________________________
-void EventDisplayKernel::AddDrawFunction(const std::string& window_name, std::string object_name, const std::function<void(void)>& fcn,  Frequency::Type type)
+void Singleton::AddDrawFunction(const std::string& window_name, std::string object_name, const std::function<void(void)>& fcn,  Frequency::Type type)
 {
     //search through the list of window names, to find the one the user wants to add this function to. 
     UserWindow* my_window=nullptr; 
@@ -668,7 +672,7 @@ void EventDisplayKernel::AddDrawFunction(const std::string& window_name, std::st
 /// @param slider_name name of the slider
 /// @param min_val minimum value
 /// @param max_val maximum value 
-void EventDisplayKernel::AddUserSlider(const std::string& slider_name, double min_val, double max_val, int n_steps, std::string format)
+void Singleton::AddUserSlider(const std::string& slider_name, double min_val, double max_val, int n_steps, std::string format)
 {
     // check that min < max
     if (min_val >= max_val) {
@@ -714,7 +718,7 @@ void EventDisplayKernel::AddUserSlider(const std::string& slider_name, double mi
     this->SetParameter<double>(slider_name, (min_val + max_val)/2.); 
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::AddUserWindow(const std::string&  window_name, UInt_t width, UInt_t height)
+void Singleton::AddUserWindow(const std::string&  window_name, UInt_t width, UInt_t height)
 {
 #ifdef DEBUG
     Info(__func__, "in body. adding new window '%s'", window_name.c_str()); 
@@ -739,7 +743,7 @@ void EventDisplayKernel::AddUserWindow(const std::string&  window_name, UInt_t w
 #endif
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::CloseApp(Key<EventGUI>) 
+void Singleton::CloseApp(Key<EventGUI>) 
 { 
 #ifdef DEBUG
     Info(__func__, "in body. deleting GUI...");
@@ -757,7 +761,7 @@ void EventDisplayKernel::CloseApp(Key<EventGUI>)
 #endif
 };
 //________________________________________________________________________________________________
-void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, bool activate_window)
+void Singleton::DoToggleWindow(Key<EventGUI>, std::string window_name, bool activate_window)
 {
 #ifdef DEBUG
     Info(__func__, "searching for window '%s'...", window_name.c_str());
@@ -813,7 +817,7 @@ void EventDisplayKernel::DoToggleWindow(Key<EventGUI>, std::string window_name, 
     SetWindowStatus();
 }
 //________________________________________________________________________________________________
-UInt_t EventDisplayKernel::GetEventNumber(size_t index)
+UInt_t Singleton::GetEventNumber(size_t index)
 {
     if (index >= fEventNumbers.size()) {
         Error(__func__, "Illegal event index %zi requested, valid range is [0-%zi]", index, fEventNumbers.size()-1);
@@ -822,7 +826,7 @@ UInt_t EventDisplayKernel::GetEventNumber(size_t index)
     return fEventNumbers[index];
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::SetWindowStatus()
+void Singleton::SetWindowStatus()
 {
     if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
 
@@ -833,13 +837,13 @@ void EventDisplayKernel::SetWindowStatus()
     fGUI->SetWindowStatus(fMyKey, fUserWindows);
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::DoSetTimestamp(Key<TimeControlPanel>, double timestamp)
+void Singleton::DoSetTimestamp(Key<TimeControlPanel>, double timestamp)
 {
     fTimestamp = timestamp; 
     UpdateTimestamp();
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::UpdateTimestamp()
+void Singleton::UpdateTimestamp()
 {
     if (fAppState == AppState::kExit) {  /*noop if app isn't active*/ return; }
 
@@ -861,7 +865,7 @@ void EventDisplayKernel::UpdateTimestamp()
     }
 }
 //________________________________________________________________________________________________
-void EventDisplayKernel::AddTimeSlider(double t_min, double t_max)
+void Singleton::AddTimeSlider(double t_min, double t_max)
 {
     fMinTimestamp = t_min; 
     fMaxTimestamp = t_max; 
@@ -875,7 +879,7 @@ void EventDisplayKernel::AddTimeSlider(double t_min, double t_max)
     fTimestamp = (t_min + t_max)/2.;
 }
 //________________________________________________________________________________________________
-template <typename T> void EventDisplayKernel::HandleParameter(const std::string& param_name, T& val, ParamOperation operation_type)
+template <typename T> void Singleton::HandleParameter(const std::string& param_name, T& val, ParamOperation operation_type)
 {
     //check some minimum requirements about the parameter 
     static_assert(std::is_default_constructible_v<T>); 
@@ -932,21 +936,21 @@ template <typename T> void EventDisplayKernel::HandleParameter(const std::string
     }
 }
 //explicit template instantiations
-template void EventDisplayKernel::HandleParameter(const std::string& param_name, double& val, ParamOperation operation_type);
-template void EventDisplayKernel::HandleParameter(const std::string& param_name, int& val, ParamOperation operation_type);
-template void EventDisplayKernel::HandleParameter(const std::string& param_name, std::string& val, ParamOperation operation_type);
+template void Singleton::HandleParameter(const std::string& param_name, double& val, ParamOperation operation_type);
+template void Singleton::HandleParameter(const std::string& param_name, int& val, ParamOperation operation_type);
+template void Singleton::HandleParameter(const std::string& param_name, std::string& val, ParamOperation operation_type);
 //________________________________________________________________________________________________
-template <typename T> void EventDisplayKernel::SetParameter(const std::string& param_name, T val)
+template <typename T> void Singleton::SetParameter(const std::string& param_name, T val)
 {
     //try to *set* a parameter: 
     HandleParameter<T>(param_name, val, ParamOperation::kSet); 
 }
 //explicit template instantiations
-template void EventDisplayKernel::SetParameter(const std::string& param_name, double val);
-template void EventDisplayKernel::SetParameter(const std::string& param_name, int val);
-template void EventDisplayKernel::SetParameter(const std::string& param_name, std::string val);
+template void Singleton::SetParameter(const std::string& param_name, double val);
+template void Singleton::SetParameter(const std::string& param_name, int val);
+template void Singleton::SetParameter(const std::string& param_name, std::string val);
 //________________________________________________________________________________________________
-template <typename T> T EventDisplayKernel::GetParameter(const std::string& param_name)
+template <typename T> T Singleton::GetParameter(const std::string& param_name)
 {
     //try to *get* a parameter: 
     T val; 
@@ -954,17 +958,18 @@ template <typename T> T EventDisplayKernel::GetParameter(const std::string& para
     return val; 
 }
 //explicit template instantiations
-template double         EventDisplayKernel::GetParameter(const std::string& param_name);
-template int            EventDisplayKernel::GetParameter(const std::string& param_name);
-template std::string    EventDisplayKernel::GetParameter(const std::string& param_name);
+template double         Singleton::GetParameter(const std::string& param_name);
+template int            Singleton::GetParameter(const std::string& param_name);
+template std::string    Singleton::GetParameter(const std::string& param_name);
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
 //explicity instantiate valid templates
-template double EventDisplayKernel::GetData<double>(std::string branch_name);
+template double Singleton::GetData<double>(std::string branch_name);
 //
-template ROOT::VecOps::RVec<double> EventDisplayKernel::GetData<ROOT::VecOps::RVec<double>>(std::string branch_name);
+template ROOT::VecOps::RVec<double> Singleton::GetData<ROOT::VecOps::RVec<double>>(std::string branch_name);
 //
-template unsigned int EventDisplayKernel::GetData<unsigned int>(std::string branch_name);
+template unsigned int Singleton::GetData<unsigned int>(std::string branch_name);
 //
+}

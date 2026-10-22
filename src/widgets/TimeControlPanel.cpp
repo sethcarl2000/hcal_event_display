@@ -1,9 +1,12 @@
 
-#include <EventGUI.hpp>
-#include <EventDisplayKernel.hpp>
+#include <EDK/EventGUI.hpp>
+#include <EDK/Singleton.hpp>
 // TGUI headers
 #include <TGLabel.h>
 #include <TGSlider.h>
+
+namespace EDK 
+{
 
 //________________________________________________________________________________________________
 TimeControlPanel::TimeControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGUI* parent, UInt_t width)
@@ -42,13 +45,13 @@ void TimeControlPanel::DoSliderMoved()
 
     double time = fMinTimestamp + slider_pos*(fMaxTimestamp - fMinTimestamp);
 
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = Singleton::Instance(); 
 
     //set this new event index 
     kernel.DoSetTimestamp(fMyKey, time); 
 }
 //________________________________________________________________________________________________
-void TimeControlPanel::SetTimestamp(Key<EventDisplayKernel>, double timestamp)
+void TimeControlPanel::SetTimestamp(Key<Singleton>, double timestamp)
 {
 #ifdef DEBUG
     Info(__func__, "in body. timestamp: %f", timestamp);
@@ -69,3 +72,5 @@ void TimeControlPanel::SetTimestamp(Key<EventDisplayKernel>, double timestamp)
 }
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
+
+}

@@ -1,10 +1,13 @@
 
-#include <EventGUI.hpp>
-#include <UserSlider.hpp>
-#include <EventDisplayKernel.hpp>
+#include <EDK/EventGUI.hpp>
+#include <EDK/UserSlider.hpp>
+#include <EDK/Singleton.hpp>
 // TGUI headers
 #include <TGLabel.h>
 #include <TGSlider.h>
+
+namespace EDK 
+{
 
 //________________________________________________________________________________________________
 UserParameterPanel::UserParameterPanel(Key<EventGUI>, const TGWindow* ptr, EventGUI* parent, UInt_t width)
@@ -22,3 +25,5 @@ void UserParameterPanel::AddUserSlider(Key<EventGUI>, const std::string& param_n
 }   
 //________________________________________________________________________________________________
 //________________________________________________________________________________________________
+
+}

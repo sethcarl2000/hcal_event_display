@@ -1,7 +1,7 @@
-#ifndef UserSlider_hpp
-#define UserSlider_hpp
+#ifndef EDK_UserSlider_hpp
+#define EDK_UserSlider_hpp
 
-#include <Key.hpp>
+#include <EDK/Key.hpp>
 // TGUI headers
 #include <TGFrame.h> 
 #include <TGButton.h> 
@@ -12,7 +12,10 @@
 #include <string> 
 #include <vector> 
 #include <memory> 
- 
+
+namespace EDK 
+{
+
 class UserParameterPanel; 
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -61,5 +64,6 @@ public:
     ClassDef(UserSlider,0);
 };
 
+}
 
 #endif

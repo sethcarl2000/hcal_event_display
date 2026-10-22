@@ -1,12 +1,15 @@
 
-#include <UserApp.hpp> 
-#include <UserWindow.hpp>
+#include <EDK/UserApp.hpp> 
+#include <EDK/UserWindow.hpp>
 //ROOT headers
 #include <TError.h> 
 //stdlib headers
 #include <cstdlib>
 #include <iostream> 
-#include <stdexcept> 
+#include <stdexcept>
+
+namespace EDK 
+{
 
 #ifdef DEBUG
 namespace {
@@ -111,3 +114,5 @@ std::string UserApp::GetWindowName() { return (fParent == nullptr) ? "null" : fP
 //__________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________
+
+}

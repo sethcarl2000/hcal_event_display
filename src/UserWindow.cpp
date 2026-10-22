@@ -1,10 +1,13 @@
 
-#include <UserWindow.hpp>
-#include <EventDisplayKernel.hpp>
+#include <EDK/UserWindow.hpp>
+#include <EDK/Singleton.hpp>
 //ROOT headers
 #include <TError.h> 
 //stdlib headers
 #include <algorithm> 
+
+namespace EDK 
+{
 
 //__________________________________________________________________________________________________________________________
 void UserWindow::DrawObjects(Frequency::Type type)
@@ -13,7 +16,7 @@ void UserWindow::DrawObjects(Frequency::Type type)
     Info(__func__, "in body. fetching kernel...");
 #endif
     //check what state the app is in. if it's in the 'init' state, we need to run all 'draw' functions (to collect all necessary data)
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = Singleton::Instance(); 
     auto app_state = kernel.GetAppState(); 
 
     fCurrentDrawFunctionFrequency = type;
@@ -34,7 +37,7 @@ void UserWindow::DrawObjects(Frequency::Type type)
     switch (app_state) {
 
         //if we're in the 'init' state, we need to loop over all 'draw' events, to see which branches we need. 
-        case EventDisplayKernel::AppState::kInit : {
+        case Singleton::AppState::kInit : {
 #ifdef DEBUG
             Info(__func__, "App state is 'init'"); 
 #endif  
@@ -56,7 +59,7 @@ void UserWindow::DrawObjects(Frequency::Type type)
             return; 
         }
         
-        case EventDisplayKernel::AppState::kActive : {
+        case Singleton::AppState::kActive : {
 #ifdef DEBUG
             Info(__func__, "App state is 'active'"); 
 #endif
@@ -92,8 +95,8 @@ void UserWindow::DrawObjects(Frequency::Type type)
         }
         default : {
             //it should not be possible for the app state to be 'none' here...
-            if (app_state == EventDisplayKernel::AppState::kNone) {
-                Error(__func__, "<UserWindow: %s>: Somehow, we got here even though 'EventDisplayKernel' app is in state 'None'.", GetName().c_str());
+            if (app_state == Singleton::AppState::kNone) {
+                Error(__func__, "<UserWindow: %s>: Somehow, we got here even though 'Singleton' app is in state 'None'.", GetName().c_str());
                 std::exit(1); 
                 return; 
             }
@@ -114,7 +117,7 @@ UserWindow::~UserWindow() {
     fPrimitiveList_timestep.Delete();  
 }
 //__________________________________________________________________________________________________________________________
-void UserWindow::DoActivate(Key<EventDisplayKernel>)
+void UserWindow::DoActivate(Key<Singleton>)
 {
     if (!IsActive()) {
 
@@ -136,7 +139,7 @@ void UserWindow::DoDeactivate()
 #ifdef DEBUG
     Info(__func__, "done deleting app. telling kernel to update window status...");
 #endif
-    auto& kernel = EventDisplayKernel::Instance();
+    auto& kernel = Singleton::Instance();
     kernel.SetWindowStatus();
 #ifdef DEBUG
     Info(__func__, "done telling kernel to update window status. leaving body.");
@@ -146,13 +149,13 @@ void UserWindow::DoDeactivate()
 void UserWindow::cd()
 {
     //get access to the kernel
-    auto& kernel = EventDisplayKernel::Instance();
+    auto& kernel = Singleton::Instance();
 
     //set this as the active user window
     kernel.SetUserWindow(fMyKey, this);
 
     //set our canvas as the active canvas; 
-    if (EventDisplayKernel::Instance().GetAppState() == EventDisplayKernel::AppState::kActive && IsActive()) {
+    if (Singleton::Instance().GetAppState() == Singleton::AppState::kActive && IsActive()) {
         auto canv = fApp->GetCanvas(); 
         canv->cd(); 
         kernel.SetCanvas(fMyKey, canv);
@@ -161,7 +164,7 @@ void UserWindow::cd()
     }
 }
 //__________________________________________________________________________________________________________________________
-void UserWindow::AddDrawnItem(Key<EventDisplayKernel>, DrawFunction draw_function, Frequency::Type type)
+void UserWindow::AddDrawnItem(Key<Singleton>, DrawFunction draw_function, Frequency::Type type)
 {
     auto& draw_function_list = (type == Frequency::Type::kEachEvent) ? fDrawFunctions_event : fDrawFunctions_timestep; 
 
@@ -191,3 +194,5 @@ void UserWindow::AddDrawnItem(Key<EventDisplayKernel>, DrawFunction draw_functio
 //__________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________
+
+}

@@ -1,8 +1,10 @@
-#ifndef DrawFunction_hpp
-#define DrawFunction_hpp
+#ifndef EDK_DrawFunction_hpp
+#define EDK_DrawFunction_hpp
 
 #include <functional> 
 #include <string> 
+namespace EDK 
+{
 
 struct DrawFunction {
     std::string name{}; 
@@ -14,5 +16,7 @@ struct DrawFunction {
 
 //this lets us check if two structs are the same 
 inline bool operator==(const DrawFunction& lhs, const DrawFunction& rhs) { return lhs.name == rhs.name; }
+
+}
 
 #endif

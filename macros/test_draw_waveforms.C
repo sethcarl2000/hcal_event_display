@@ -1,6 +1,5 @@
 
-#include <EventDisplayKernel.hpp>
-#include <UserWindow.hpp>
+#include <EDK.hpp>
 // ROOT headers
 #include <TBox.h>
 #include <TStyle.h> 
@@ -52,7 +51,7 @@ void draw_time_hist();
 void test_draw_waveforms()
 {
     // get access to the kernel
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = EDK::Instance(); 
 
 
     kernel.AddUserSlider("max_amplitude", 0, 0.5, 10, "%.3f"); 
@@ -60,21 +59,24 @@ void test_draw_waveforms()
     // add our first user window (hcal)
     kernel.AddUserWindow("hcal", 500, 800);
 
+    auto each_event    = EDK::Frequency::Type::kEachEvent; 
+    auto each_timestep = EDK::Frequency::Type::kEachTimeStep; 
+    
 
     // add our first drawn item
-    kernel.AddDrawFunction("hcal", "frame", draw_hcal_frame, Frequency::Type::kEachEvent);
+    kernel.AddDrawFunction("hcal", "frame", draw_hcal_frame, each_event);
 
-    kernel.AddDrawFunction("hcal", "waveform_amplitude", draw_waveforms, Frequency::Type::kEachTimeStep);
+    kernel.AddDrawFunction("hcal", "waveform_amplitude", draw_waveforms, each_timestep);
 
     // Add the 'kernel time hist' 
     kernel.AddUserWindow("time", 900, 400);
 
-    kernel.AddDrawFunction("time", "goodblock_atime", draw_time_hist, Frequency::Type::kEachTimeStep);
+    kernel.AddDrawFunction("time", "goodblock_atime", draw_time_hist, each_timestep);
 
     // Add the waveform profile window
     kernel.AddUserWindow("Waveform Profile", 900, 400); 
 
-    kernel.AddDrawFunction("Waveform Profile", "Amplitude sum", draw_waveform_profile, Frequency::Type::kEachTimeStep); 
+    kernel.AddDrawFunction("Waveform Profile", "Amplitude sum", draw_waveform_profile, each_timestep); 
     
 
     // tell the kernel we want a 'time slider', and also specify what we want the time-range to be. 
@@ -100,7 +102,7 @@ void draw_hcal_frame()
     th2d->GetZaxis()->SetRangeUser(0, 200); 
     th2d->SetStats(false);
 
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = EDK::Instance(); 
     kernel.Draw(th2d, "colz"); 
 }
 //___________________________________________________________________________________________________________
@@ -109,10 +111,10 @@ void draw_waveforms()
     // This should be the anatomy of any given script: 
 
     // First, get access to the kernel:                          
-    auto& kernel = EventDisplayKernel::Instance();  
+    auto& kernel = EDK::Instance();  
     // Note here the type declaration: auto& kernel = .... 
     // This means that this is a _reference_ to the kernel object. 
-    // Since the EventDisplayKernel is implemented as a Meyer's singleton,
+    // Since the EDK is implemented as a Meyer's singleton,
     // this is the typical pattern. In words: 
     //      Everyone is allowed to get a modifiable _reference_ to the _single_ kernel object. 
     //      This is opposed to singleton-object which is accessible via a global ptr, because 
@@ -216,7 +218,7 @@ void draw_waveforms()
 void draw_time_hist()
 {
     auto hist = new TH1D("h_time", "H.Cal 'goodblocks' time;block time (ns);block energy (MeV)", 50, -100., +150.);
-    auto& kernel = EventDisplayKernel::Instance();
+    auto& kernel = EDK::Instance();
     //kernel.Draw(hist, "HIST");
 
     const br_array<double>& blocks_time = kernel.GetData<br_array<double>>("sbs.hcal.goodblock.atime");
@@ -226,7 +228,7 @@ void draw_time_hist()
 
     kernel.Draw(hist, "HIST");
 
-    if (kernel.GetAppState() != EventDisplayKernel::AppState::kActive) return;
+    if (!kernel.IsActive()) return;
 
     double max = hist->GetMaximum(); 
     double timestamp = kernel.GetTimestamp();
@@ -243,7 +245,7 @@ void draw_time_hist()
 //___________________________________________________________________________________________________________
 void draw_waveform_profile()
 {
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = EDK::Instance(); 
 
     //waveform samples
     const br_array<double>& waveform_samps  = kernel.GetData<br_array<double>>("sbs.hcal.samps");
@@ -294,7 +296,7 @@ void draw_waveform_profile()
 //___________________________________________________________________________________________________________
 void draw_waveform_profile_timestamp()
 {
-    auto& kernel = EventDisplayKernel::Instance(); 
+    auto& kernel = EDK::Instance(); 
 
     if (!kernel.IsActive()) return; 
 

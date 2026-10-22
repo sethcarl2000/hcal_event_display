@@ -2,26 +2,29 @@ cmake_minimum_required(VERSION 3.23)
 
 # Event display
 # 
-project(EventDisplayKernel VERSION 0.1.1 LANGUAGES CXX)
+project(EventDisplayKernel VERSION 0.2.0 LANGUAGES CXX)
+
+include(GNUInstallDirs)
 
 # Find ROOT as a package
 # 
 find_package(ROOT 6.20 REQUIRED COMPONENTS Core RIO Physics)
 
 set(headers
-    include/EventDisplayKernel.hpp
-    include/Key.hpp
-    include/Frequency_Type.hpp
-    include/DrawFunction.hpp
-    include/UserApp.hpp
-    include/UserWindow.hpp
-    include/EventGUI.hpp
-    include/UserSlider.hpp
-    include/UserParameter.hpp
+    include/EDK.hpp
+    include/EDK/Singleton.hpp
+    include/EDK/Key.hpp
+    include/EDK/Frequency_Type.hpp
+    include/EDK/DrawFunction.hpp
+    include/EDK/UserApp.hpp
+    include/EDK/UserWindow.hpp
+    include/EDK/EventGUI.hpp
+    include/EDK/UserSlider.hpp
+    include/EDK/UserParameter.hpp
 )
 
 set(sources
-    src/EventDisplayKernel.cpp
+    src/Singleton.cpp
     src/UserApp.cpp
     src/UserWindow.cpp
     src/EventGUI.cpp
@@ -37,13 +40,28 @@ set(sources
 # be explicit about the directory in which to put the '.so' shared library file
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
-add_library(EDK SHARED ${sources} ${headers})
+add_library(EDK SHARED ${sources})
+target_sources(EDK 
+    PUBLIC 
+        FILE_SET HEADERS
+        BASE_DIRS ${PROJECT_SOURCE_DIR}/include
+        FILES ${headers}
+)
+
 target_include_directories(EDK PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(EDK PUBLIC ROOT::Core ROOT::RIO ROOT::Physics)
 
 # automatically generate the 'set_edisp_env.sh' script
 set(EDK_ENV_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/include")
 set(EDK_ENV_BUILD_PATH "${PROJECT_BINARY_DIR}")
+
+# install rules
+install(TARGETS EDK
+    EXPORT EDKTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
 configure_file(
     "${PROJECT_SOURCE_DIR}/cmake/set_edisp_env.sh.in" # input template 
@@ -67,4 +85,4 @@ if (DEBUG)
     target_compile_options(EDK PRIVATE -g)
 endif()
 
-root_generate_dictionary(G__EDK ${headers} LINKDEF include/LinkDef.h MODULE EventDisplay)
+root_generate_dictionary(G__EDK ${headers} LINKDEF include/LinkDef.h MODULE EDK)
