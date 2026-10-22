@@ -45,7 +45,16 @@ Once you have `source`'d the `set_edisp_env.sh` script, you just need to add the
 ```c++
 // in your macro, 'vis_data.C'
 
-#include <EventDisplayKernel.hpp>
+#include <EDK.hpp>
 // ... other ROOT headers
 // ...
+
+void vis_data() 
+{
+  // ... 
+  auto& instance = EDK::Instance(); 
+  // ... 
+}
+
 ```
+See the `macros` directory for full examples. 
