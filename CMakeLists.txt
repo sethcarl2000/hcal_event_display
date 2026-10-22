@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.23)
 
 # Event display
 # 
-project(HCalEventDisplay VERSION 0.1 LANGUAGES CXX)
+project(EventDisplayKernel VERSION 0.1.1 LANGUAGES CXX)
 
 # Find ROOT as a package
 # 
@@ -37,13 +37,13 @@ set(sources
 # be explicit about the directory in which to put the '.so' shared library file
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
-add_library(EventDisplay SHARED ${sources} ${headers})
-target_include_directories(EventDisplay PUBLIC "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(EventDisplay PUBLIC ROOT::Core ROOT::RIO ROOT::Physics)
+add_library(EDK SHARED ${sources} ${headers})
+target_include_directories(EDK PUBLIC "${PROJECT_SOURCE_DIR}/include")
+target_link_libraries(EDK PUBLIC ROOT::Core ROOT::RIO ROOT::Physics)
 
 # automatically generate the 'set_edisp_env.sh' script
-set(EDISP_ENV_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/include")
-set(EDISP_ENV_BUILD_PATH "${PROJECT_BINARY_DIR}")
+set(EDK_ENV_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/include")
+set(EDK_ENV_BUILD_PATH "${PROJECT_BINARY_DIR}")
 
 configure_file(
     "${PROJECT_SOURCE_DIR}/cmake/set_edisp_env.sh.in" # input template 
@@ -63,8 +63,8 @@ message(STATUS
 
 option(DEBUG "Enable GUI debug printing" OFF)
 if (DEBUG)
-    target_compile_definitions(EventDisplay PRIVATE DEBUG)
-    target_compile_options(EventDisplay PRIVATE -g)
+    target_compile_definitions(EDK PRIVATE DEBUG)
+    target_compile_options(EDK PRIVATE -g)
 endif()
 
-root_generate_dictionary(G__EventDisplay ${headers} LINKDEF include/LinkDef.h MODULE EventDisplay)
+root_generate_dictionary(G__EDK ${headers} LINKDEF include/LinkDef.h MODULE EventDisplay)
