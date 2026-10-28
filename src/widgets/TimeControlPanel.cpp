@@ -31,7 +31,7 @@ TimeControlPanel::TimeControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGUI*
     auto frame_slider = new TGHorizontalFrame(this, width, 50);
 
     fSlider = new TGHSlider(frame_slider, width);
-    fSlider->Connect("PositionChanged(Int_t)", "TimeControlPanel", this, "DoSliderMoved()");
+    fSlider->Connect("PositionChanged(Int_t)", "EDK::TimeControlPanel", this, "DoSliderMoved()");
     frame_slider->AddFrame(fSlider, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY | kLHintsExpandX, 5,5,5,5)); 
     AddFrame(frame_slider, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY | kLHintsExpandX, 5,5,5,5));
 

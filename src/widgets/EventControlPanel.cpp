@@ -22,17 +22,17 @@ EventControlPanel::EventControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGU
 
     //Next event button
     auto button_next_event  = new TGTextButton(frame_buttons, "&Next event", 1); 
-    button_next_event->Connect("Clicked()", "EventControlPanel", this, "DoNextEvent()"); 
+    button_next_event->Connect("Clicked()", "EDK::EventControlPanel", this, "DoNextEvent()"); 
     frame_buttons->AddFrame(button_next_event, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 20, 10, 5, 5)); 
 
     //Prev. event button
     auto button_prev_event  = new TGTextButton(frame_buttons, "&Prev. event", 1); 
-    button_prev_event->Connect("Clicked()", "EventControlPanel", this, "DoPrevEvent()"); 
+    button_prev_event->Connect("Clicked()", "EDK::EventControlPanel", this, "DoPrevEvent()"); 
     frame_buttons->AddFrame(button_prev_event, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 20, 10, 5, 5)); 
 
     //Random event button
     auto button_rand_event  = new TGTextButton(frame_buttons, "&Random event", 1); 
-    button_rand_event->Connect("Clicked()", "EventControlPanel", this, "DoRandomEvent()"); 
+    button_rand_event->Connect("Clicked()", "EDK::EventControlPanel", this, "DoRandomEvent()"); 
     frame_buttons->AddFrame(button_rand_event, new TGLayoutHints(kLHintsRight | kLHintsCenterY, 20, 10, 5, 5)); 
 
     //event label
@@ -49,7 +49,7 @@ EventControlPanel::EventControlPanel(Key<EventGUI>, const TGWindow* ptr, EventGU
     auto frame_slider = new TGHorizontalFrame(this, width, 50);
 
     fSlider = new TGHSlider(frame_slider, width);
-    fSlider->Connect("Released()", "EventControlPanel", this, "DoSliderReleased()");
+    fSlider->Connect("Released()", "EDK::EventControlPanel", this, "DoSliderReleased()");
     frame_slider->AddFrame(fSlider, new TGLayoutHints(kLHintsCenterX | kLHintsCenterY | kLHintsExpandX, 5,5,5,5)); 
     AddFrame(frame_slider, new TGLayoutHints(kLHintsBottom | kLHintsCenterX | kLHintsExpandX, 5,5,5,5));
 

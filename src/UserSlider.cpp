@@ -28,7 +28,7 @@ UserSlider::UserSlider(Key<UserParameterPanel>, const TGWindow* ptr, UserParamet
     // now, we add the actual slider
     fSlider = new TGHSlider(this, width);
     fSlider->SetRange(0, fInfo.n_steps-1); 
-    fSlider->Connect("PositionChanged(Int_t)", "UserSlider", this, "DoSliderMoved()");
+    fSlider->Connect("PositionChanged(Int_t)", "EDK::UserSlider", this, "DoSliderMoved()");
     AddFrame(
         fSlider, 
         new TGLayoutHints(kLHintsCenterX | kLHintsCenterY | kLHintsExpandX, 5,5,5,5)
